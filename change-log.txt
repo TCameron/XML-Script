@@ -1,0 +1,54 @@
+Change Log for IATI XML Production Script
+
+May 26, 2016, Version 0.8:
+	Additions:
+
+	Changes:
+		Changed how collaboration-type was input into the system
+			Now will produce a number, instead of transforming a string to a number
+		flow-type, finance-type, aid-type, and tied-status are now optional fields in the code
+
+	Fixes:
+		usg:regular-account now uses the "Regular Account Code" field.
+
+	Future:
+
+May 19, 2016, Version 0.7:
+	Additions:
+		
+	Changes:
+
+	Fixes:
+		Date placeholders now keep up with current year, instead of hardcoded 2015-2016 year
+		Fixed a typo in creation of Participating Org Role 1 indicator
+
+	Future:
+		Shorten the docs_loop function
+
+May 3, 2016, Version 0.6:
+
+	Additions:
+		Script will now produce recipient-country and recipient-region elements
+		Added ref attribute to Participating Org Role 4 elements
+		Added ability to differentiate between recipient-country and recipient-region
+		Added ability to create document-link element for activities
+		Added disbursement-channel element
+		Began providing DAC Sector Codes
+		Commented on more sections to make the code easier to read
+
+	Changes:
+		Changed how titles are created:
+			US-1-[Name of Country/Region]-[Category]
+		Hierarchy "2" was changed to Hierarchy "3"
+
+	Fixes:
+		Moved Participating Org Roles 3 and 4 elements from Hierarchy 1 groups to Hierarchy 3 activities
+		Changed default tied status to  (Untied)
+			Previous entry for default was not a valid code
+		Now using appropriate field for budget
+			Was using "TEC1" field; now using "Total Allocations" field
+		Moved order of fields to correspond to IATI compliance
+		Now using sector categories to group activities
+
+	Future:
+		Shorten the docs_loop function
