@@ -1,6 +1,20 @@
 Change Log for IATI XML Production Script
 
-<<<<<<< HEAD
+June 30, 2016, Version 0.11:
+	Additions:
+		Implemented sub-national location reporting ability
+			Stating location_reach is for intended beneficiaries
+			Stating locations coordinates are approximate
+			Stating geographic location class is administrative region
+		Added ability to report pending results
+
+	Changes:
+		Refactored the results_loop to match the format of a new results file.
+
+	Fixes:
+
+	Future:
+
 June 20, 2016, Version 0.10:
 	Additions:
 		Implemented splitting of XML files into recipient countries and regions.
@@ -16,12 +30,6 @@ June 10, 2016, Version 0.9:
 		Implentation of the ability to report results in hierarchy 2.
 			This will require a new results file to be input into the system.
 		Hierarchy 1 category descriptions are checked via a function method.
-=======
-June 7, 2016, Version 0.9:
-	Additions:
-		Started implentation of the ability to report results in hierarchy 2.
-		Hierarchy 1 category descriptions are checked via a function method
->>>>>>> edb3dd9e33c0692fed5d26a774ab93c5d448380f
 
 	Changes:
 
