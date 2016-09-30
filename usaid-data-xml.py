@@ -8,8 +8,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "7-19-2016"
-__version__ = "0.13"
+__date__ = "9-13-2016"
+__version__ = "0.16"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -47,7 +47,11 @@ def id_loop(ombfile):
                 except ValueError:
                     country = '998'
             else:
-                country = '998'
+                # This is due to Namibia's code being "NA", but numpy counts "NA" as not applicable, so it gets skipped
+                if str(ombfile["ISO Alpha Code"][i] == 'NAM'):  # Being used as a temporary stopgap
+                    country = 'NA'
+                else:
+                    country = '998'
         try:
             categorytype = str(int(omb["U.S. Government Sector Code"][i]))[0:2]
         except ValueError:
@@ -73,13 +77,17 @@ def group_split(ombfile):
         try:
             country = str(int(ombfile["DAC Regional Code"][i]))
         except ValueError:
+            print(str(ombfile["ISO Alpha Code"][i]))
             if str(ombfile["ISO Alpha Code"][i]) != 'nan':
                 try:
                     country = str(ombfile["ISO Alpha Code"][i])
                 except ValueError:
                     country = 'XXX'
             else:
-                country = '998'
+                if str(ombfile["ISO Alpha Code"][i] == 'NAM'):  # Being used as a temporary stopgap
+                    country = 'NA'
+                else:
+                    country = '998'
         if country not in actives:
             actives.append(country)
             ids.append([country, i])
@@ -134,6 +142,7 @@ def trans_loop(idawarded, award):
         if award == idawarded[i]:
             transactions.append(i)
     return transactions
+
 
 def location_loop(ombfile, award):
     """
@@ -487,7 +496,7 @@ print('Converting format...')
 idlist, idawards, isolist = id_loop(omb)
 print(idawards)
 # This will turn on full dataset dump into one XML. Untab all code after this.
-# ombActs = activities_loop(idlist)
+ombActs = activities_loop(idlist)
 
 h1acts = activities_loop(idlist)
 
@@ -861,23 +870,25 @@ for ombActs in ombgrouping:
                     except ValueError:
                         tiedCode = '0'
                     # This is for error checking
-                    if str(int(omb["Budget Start Date"][relact])) != 'nan':
-                        periodStart = \
-                            str(int(omb["Budget Start Date"][relact]))
-                        periodStartDate = periodStart[0:4] + '-' + periodStart[4:6] + '-' +\
-                            periodStart[6:8]
-                    else:
+                    try:
+                        if str(int(omb["Budget Start Date"][relact])) != 'nan':
+                            periodStart = \
+                                str(int(omb["Budget Start Date"][relact]))
+                            periodStartDate = periodStart[0:4] + '-' + periodStart[4:6] + '-' +\
+                                periodStart[6:8]
+                    except ValueError:
                         periodStartDate = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
-                    if str(int(omb["Budget End Date"][relact])) != 'nan':
-                        periodEnd = \
-                            str(int(omb["Budget End Date"][relact]))
-                        periodEndDate = periodEnd[0:4] + '-' + periodEnd[4:6] + '-' +\
-                            periodEnd[6:8]
-                    else:
+                    try:
+                        if str(int(omb["Budget End Date"][relact])) != 'nan':
+                            periodEnd = \
+                                str(int(omb["Budget End Date"][relact]))
+                            periodEndDate = periodEnd[0:4] + '-' + periodEnd[4:6] + '-' +\
+                                periodEnd[6:8]
+                    except ValueError:
                         periodEndDate = str(datetime.datetime.utcnow().strftime('%Y')) + '-09-30'
                     budgetValueDate = periodStartDate
                     try:
-                        budgetAmount = '{0:.2f}'.format(int(omb["Total allocations"][relact]))
+                        budgetAmount = '{0:.2f}'.format(omb["Total allocations"][relact])
                     except ValueError:
                         budgetAmount = '0.00'
 
@@ -920,7 +931,7 @@ for ombActs in ombgrouping:
                         # Variables that depend on entries
                         # If the disbursement has a value, set value to disbursement.
                         try:
-                            transAmount = int(omb["Award Transaction Value"][trans])
+                            transAmount = omb["Award Transaction Value"][trans]
                             # transAmount = int(omb["Obligation Amount"][trans])
                             # transAmount = int(omb["Disbursement Amount"][trans])
                             valueAmount = '{0:.2f}'.format(transAmount)
@@ -1088,6 +1099,24 @@ for ombActs in ombgrouping:
                     conditions = SubElement(activity, 'conditions', attached="0")
                     SubElement(activity, 'usg__mechanism-signing-date',
                                iso_h_date=signdateformat)
+
+                    # Extra fields requested by State
+                    duns = str(omb["Implementing Agent's DUNS Number"][relact])
+                    tec = '{0:.2f}'.format(omb["TEC1"][relact])
+                    stateloc = str(omb["State Location"][relact])
+
+                    if (duns != 'nan'):
+                        dunselement = SubElement(activity, 'usg__duns-number')
+                        narrative = SubElement(dunselement, 'narrative')
+                        narrative.text = duns
+                    if (tec != 'nan'):
+                        tecelement = SubElement(activity, 'usg__tec1')
+                        narrative = SubElement(tecelement, 'narrative')
+                        narrative.text = tec
+                    if (stateloc != 'nan'):
+                        stateelement = SubElement(activity, 'usg__state-location')
+                        narrative = SubElement(stateelement, 'narrative')
+                        narrative.text = stateloc
 
         c += 1
 

@@ -1,5 +1,39 @@
 Change Log for IATI XML Production Script
 
+September 13, 2016, Version 0.16:
+	Additions:
+		Added in State Locations field into script at the request of State.
+			This is located at the bottom of the loop for the individual activities.
+	
+	Changes:
+
+	Fixes:
+
+	Future:
+
+September 6, 2016, Version 0.15:
+	Additions:
+		Added in TEC1 and DUNS Number fields into script at the request of State.
+			This is located at the bottom of the loop for the individual activities.
+	
+	Changes:
+
+	Fixes:
+
+	Future:
+
+August 24, 2016, Version 0.14:
+	Additions:
+
+	Changes:
+		Changed budgetAmount and transAmount to take in float, instead of casting to int.
+			This fixes the missing cents issue.
+		Wrapped Budget Start Date and Budget End Date checks in try/except statements due to edge cases.
+
+	Fixes:
+
+	Future:
+
 July 19, 2016, Version 0.13:
 	Additions:
 
