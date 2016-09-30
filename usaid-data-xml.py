@@ -8,8 +8,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "6-30-2016"
-__version__ = "0.11"
+__date__ = "7-11-2016"
+__version__ = "0.12"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -165,7 +165,7 @@ def location_loop(ombfile, award):
             return locs
     return locs
 
-# TODO: Shorten this
+
 def docs_loop(ombfile, award):
     """
     Create a list of documents for an activity.
@@ -176,69 +176,38 @@ def docs_loop(ombfile, award):
     # Title, URL, Format, Category, Language
     docs = []
     tempdoc = []
-    if str(ombfile["Evaluation Title 1"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Evaluation Title 1"][award]))
-        tempdoc.append(str(ombfile["Evaluation Link 1"][award]))
-        tempdoc.append(str(ombfile["Evaluation File Format"][award]))
-        tempdoc.append(str(ombfile["Evaluation Document Category"][award]))
-        tempdoc.append(str(ombfile["Evaluation Language 1"][award]))
-        docs.append(tempdoc)
-        tempdoc = []
-    if str(ombfile["Evaluation Title 2"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Evaluation Title 2"][award]))
-        tempdoc.append(str(ombfile["Evaluation Link 2"][award]))
-        tempdoc.append(str(ombfile["Evaluation File Format"][award]))
-        tempdoc.append(str(ombfile["Evaluation Document Category"][award]))
-        tempdoc.append(str(ombfile["Evaluation Language 2"][award]))
-        docs.append(tempdoc)
-        tempdoc = []
-    if str(ombfile["Evaluation Title 3"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Evaluation Title 3"][award]))
-        tempdoc.append(str(ombfile["Evaluation Link 3"][award]))
-        tempdoc.append(str(ombfile["Evaluation File Format"][award]))
-        tempdoc.append(str(ombfile["Evaluation Document Category"][award]))
-        tempdoc.append(str(ombfile["Evaluation Language 3"][award]))
-        docs.append(tempdoc)
-        tempdoc = []
-    if str(ombfile["Evaluation Title 4"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Evaluation Title 4"][award]))
-        tempdoc.append(str(ombfile["Evaluation Link 4"][award]))
-        tempdoc.append(str(ombfile["Evaluation File Format"][award]))
-        tempdoc.append(str(ombfile["Evaluation Document Category"][award]))
-        tempdoc.append(str(ombfile["Evaluation Language 4"][award]))
-        docs.append(tempdoc)
-        tempdoc = []
-    if str(ombfile["Impact Appraisal Title 1"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Impact Appraisal Title 1"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Link 1"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Document Category"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Language 1"][award]))
-        docs.append(tempdoc)
-        tempdoc = []
-    if str(ombfile["Impact Appraisal Title 2"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Impact Appraisal Title 2"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Link 2"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Document Category"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Language 2"][award]))
-        docs.append(tempdoc)
-        tempdoc = []
-    if str(ombfile["Impact Appraisal Title 3"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Impact Appraisal Title 3"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Link 3"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Document Category"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Language 3"][award]))
-        docs.append(tempdoc)
-        tempdoc = []
-    if str(ombfile["Impact Appraisal Title 4"][award]) != 'nan':
-        tempdoc.append(str(ombfile["Impact Appraisal Title 4"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Link 4"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Document Category"][award]))
-        tempdoc.append(str(ombfile["Impact Appraisal Language 4"][award]))
-        docs.append(tempdoc)
+    i = 1
+    j = 1
+    while i:
+        try:
+            if str(ombfile["Evaluation Title " + str(i)][award]) != 'nan':
+                tempdoc.append(str(ombfile["Evaluation Title " + str(i)][award]))
+                tempdoc.append(str(ombfile["Evaluation Link " + str(i)][award]))
+                tempdoc.append(str(ombfile["Evaluation File Format"][award]))
+                tempdoc.append(str(ombfile["Evaluation Document Category"][award]))
+                tempdoc.append(str(ombfile["Evaluation Language " + str(i)][award]))
+                docs.append(tempdoc)
+                tempdoc = []
+                i += 1
+            else:
+                i = False
+        except:
+            i = False
+    while j:
+        try:
+            if str(ombfile["Impact Appraisal Title " + str(j)][award]) != 'nan':
+                tempdoc.append(str(ombfile["Impact Appraisal Title " + str(j)][award]))
+                tempdoc.append(str(ombfile["Impact Appraisal Link " + str(j)][award]))
+                tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
+                tempdoc.append(str(ombfile["Impact Appraisal Document Category"][award]))
+                tempdoc.append(str(ombfile["Impact Appraisal Language " + str(j)][award]))
+                docs.append(tempdoc)
+                tempdoc = []
+                j += 1
+            else:
+                j = False
+        except:
+            j = False
     return docs
 
 
@@ -457,7 +426,8 @@ def results_loop(resultsfile, curcat, iatiactivity):
                     targetvalue = '{0:.2f}'.format(int(resultsfile["target_result"][result]))
                     actualvalue = '{0:.2f}'.format(int(resultsfile["actual_result"][result]))
                 except ValueError:
-                    actualvalue = '0'
+                    targetvalue = '0.00'
+                    actualvalue = '0.00'
 
                 resact = SubElement(active, 'result', type=resulttype)
                 rest = SubElement(resact, 'title')
