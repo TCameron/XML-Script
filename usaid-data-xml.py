@@ -8,13 +8,9 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "5-26-2016"
-__version__ = "0.8"
-
-# TODO: Use the ISO codes to determine languages to translate into.
-# FIX: Create method to create the fields, as opposed to them being
-# populated in the main method
-# TODO: Make sure all fields will line up with the max number points.
+__date__ = "6-10-2016"
+__version__ = "0.9"
+date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
 def prettify(elem):
@@ -122,9 +118,7 @@ def docs_loop(ombfile, award):
     # Title, URL, Format, Category, Language
     docs = []
     tempdoc = []
-    print('in docs_loop')
     if str(ombfile["Evaluation Title 1"][award]) != 'nan':
-        print("Entered Eval Title 1")
         tempdoc.append(str(ombfile["Evaluation Title 1"][award]))
         tempdoc.append(str(ombfile["Evaluation Link 1"][award]))
         tempdoc.append(str(ombfile["Evaluation File Format"][award]))
@@ -133,7 +127,6 @@ def docs_loop(ombfile, award):
         docs.append(tempdoc)
         tempdoc = []
     if str(ombfile["Evaluation Title 2"][award]) != 'nan':
-        print("Entered Eval Title 2")
         tempdoc.append(str(ombfile["Evaluation Title 2"][award]))
         tempdoc.append(str(ombfile["Evaluation Link 2"][award]))
         tempdoc.append(str(ombfile["Evaluation File Format"][award]))
@@ -142,7 +135,6 @@ def docs_loop(ombfile, award):
         docs.append(tempdoc)
         tempdoc = []
     if str(ombfile["Evaluation Title 3"][award]) != 'nan':
-        print("Entered Eval Title 3")
         tempdoc.append(str(ombfile["Evaluation Title 3"][award]))
         tempdoc.append(str(ombfile["Evaluation Link 3"][award]))
         tempdoc.append(str(ombfile["Evaluation File Format"][award]))
@@ -151,7 +143,6 @@ def docs_loop(ombfile, award):
         docs.append(tempdoc)
         tempdoc = []
     if str(ombfile["Evaluation Title 4"][award]) != 'nan':
-        print("Entered Eval Title 4")
         tempdoc.append(str(ombfile["Evaluation Title 4"][award]))
         tempdoc.append(str(ombfile["Evaluation Link 4"][award]))
         tempdoc.append(str(ombfile["Evaluation File Format"][award]))
@@ -160,7 +151,6 @@ def docs_loop(ombfile, award):
         docs.append(tempdoc)
         tempdoc = []
     if str(ombfile["Impact Appraisal Title 1"][award]) != 'nan':
-        print("Entered Impact Appraisal Title 1")
         tempdoc.append(str(ombfile["Impact Appraisal Title 1"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal Link 1"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
@@ -169,7 +159,6 @@ def docs_loop(ombfile, award):
         docs.append(tempdoc)
         tempdoc = []
     if str(ombfile["Impact Appraisal Title 2"][award]) != 'nan':
-        print("Entered Impact Appraisal Title 2")
         tempdoc.append(str(ombfile["Impact Appraisal Title 2"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal Link 2"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
@@ -178,7 +167,6 @@ def docs_loop(ombfile, award):
         docs.append(tempdoc)
         tempdoc = []
     if str(ombfile["Impact Appraisal Title 3"][award]) != 'nan':
-        print("Entered Impact Appraisal Title 3")
         tempdoc.append(str(ombfile["Impact Appraisal Title 3"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal Link 3"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
@@ -187,14 +175,12 @@ def docs_loop(ombfile, award):
         docs.append(tempdoc)
         tempdoc = []
     if str(ombfile["Impact Appraisal Title 4"][award]) != 'nan':
-        print("Entered Impact Appraisal Title 4")
         tempdoc.append(str(ombfile["Impact Appraisal Title 4"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal Link 4"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal Document Category"][award]))
         tempdoc.append(str(ombfile["Impact Appraisal Language 4"][award]))
         docs.append(tempdoc)
-    print('award ' + str(award))
     return docs
 
 
@@ -219,19 +205,239 @@ def lang_loop(transelement, langs, translations):
         it += 1
 
 
+def catdesc(cat):
+    """
+    Used to create the description for a hierarchy 1 grouping.
+    :param cat: The category of the group
+    :return: The description for the group, as provided by State.
+    """
+    if cat == '10':
+        catdescription = 'To help nations effectively establish the conditions and capacity for achieving peace, ' \
+                         'security, and stability; and for responding effectively against arising threats to national' \
+                         ' or international security and stability.'
+    elif cat == '20':
+        catdescription = 'To promote and strengthen effective democracies in recipient states and move them along a' \
+                         ' continuum toward democratic consolidation.'
+    elif cat == '30':
+        catdescription = 'To contribute to improvements in the health of people, especially women, children, and' \
+                         ' other vulnerable populations in countries of the developing world, through expansion of' \
+                         ' basic health services, including family planning; strengthening national health systems,' \
+                         ' and addressing global issues and special concerns such as HIV/AIDS and other infectious' \
+                         ' diseases.'
+    elif cat == '40':
+        catdescription = 'Promote equitable, effective, accountable, and sustainable formal and non-formal education' \
+                         ' systems and address factors that place individuals at risk for poverty, exclusion,' \
+                         ' neglect, or victimization. Help populations manage their risks and gain access to' \
+                         ' opportunities that support their full and productive participation in society. Help' \
+                         ' populations rebound from temporary adversity, cope with chronic poverty, reduce' \
+                         ' vulnerability, and increase self-reliance.'
+    elif cat == '50':
+        catdescription = 'Generate rapid, sustained, and broad-based economic growth.'
+    elif cat == '60':
+        catdescription = 'Activities that support the sustainability of a productive and clean environment by:' \
+                         ' ensuring that the environment and the natural resources upon which human lives and' \
+                         ' livelihoods depend are managed in ways that sustain productivity growth, a healthy' \
+                         ' population, as well as the intrinsic spiritual and cultural value of the environment,' \
+                         ' and conserving biodiversity and managing natural resources in ways that maintain their' \
+                         ' long-term viability and preserve their potential to meet the needs of present and' \
+                         ' future generations.'
+    elif cat == '70':
+        catdescription = 'To save lives, alleviate suffering, and minimize the economic costs of conflict,' \
+                         ' disasters and displacement. Humanitarian assistance is provided on the basis of need' \
+                         ' according to principles of universality, impartiality and human dignity. It is often' \
+                         ' organized by sectors, but requires an integrated, coordinated and/or multi-sectoral' \
+                         ' approach to be most effective. Emergency operations will foster the transition from' \
+                         ' relief, through recovery, to development, but they cannot and will not replace the' \
+                         ' development investments necessary to reduce chronic poverty or establish just' \
+                         ' social services.'
+    elif cat == '80':
+        catdescription = 'To provide the general management support required to ensure completion of U.S. foreign' \
+                         ' assistance objectives by facilitating program management, monitoring and evaluation,' \
+                         ' and accounting and tracking for costs.'
+    else:
+        catdescription = 'Unspecified is used only when the category and sector are unknown or cannot be specified.'
+    return catdescription
+
+
+def sectors_loop(recip, sects, cat):
+    """
+    Find which activities are the main ones to set as hierarchy 1.
+    :param recip: The recipient country or region code.
+    :param sects: The sectors in the results file.
+    :param cat: The category to ensure that the sectors are within.
+    :return sectors: The index numbers corresponding to the rows of the appropriate sectors.
+    """
+    sectors = list()
+    actives = list()
+    for i in range(0, len(sects)):
+        if "US-1-" + str(recip[i]) + "-" + str(sects[i])[:2] == cat:
+            if str(sects[i])[:2] == cat[-2:]:  # This ensures only groups returned are current category.
+                if str(sects[i]) not in actives:
+                    actives.append(str(sects[i]))
+                    sectors.append([sects[i],i])
+                else:
+                    for each in sectors:
+                        if sects[i] == each[0]:
+                            each.append(i)
+    print("Actives: " + str(actives))
+    print("Sectors: " + str(sectors))
+    return sectors
+
+
+def results_loop(resultsfile, ombfile, curcat, iatiactivity):
+    sectorgroup = sectors_loop(resultsfile["Recipient Code"], resultsfile["Sector"], curcat)
+    print("Sector group: " + str(sectorgroup))
+    for resultgroup in sectorgroup:
+        print("Result group: " + str(resultgroup))
+        # Variables
+        hierarchy = '2'
+        resLangList = ['en']
+        currency = 'USD'
+        iden = curcat + "-" + str(resultgroup[0])
+        print(iden)
+        repOrgR = 'US-1'
+        repOrgT = '10'  # Government
+        repText = 'USA'
+        rpartOrgRef1 = 'US-USAGOV'
+        rpartOrgRole1 = '1'
+        rpartOrgText1 = 'USA'
+        rpartOrgType1 = '10'  # Government
+        rpartOrgRef2 = 'US-1'  # USAID
+        rpartOrgRole2 = '2'
+        rpartOrgText2 = 'U.S. Agency for International Development'
+        rpartOrgType2 = '10'  # Government
+        resTitleText = list()
+        resDescText = list()
+
+        # Create the activity group's name
+        if str(resultsfile["Recipient"][resultgroup[1]]) != 'nan':
+            if str(resultsfile["Category Name"][resultgroup[1]]) != 'nan':
+                restitle = 'US-' + str(resultsfile["Recipient"][resultgroup[1]]) + '-' + \
+                        rpartOrgText2 + '-' + \
+                        str(resultsfile["Category Name"][resultgroup[1]]) + '-' + \
+                        str(resultsfile["Sector Name"][resultgroup[1]])
+            else:
+                restitle = 'US-' + str(resultsfile["Recipient"][resultgroup[1]]) + '-' + \
+                        rpartOrgText2 + '-None Found'
+        else:
+            if str(resultsfile["Category Name"][resultgroup[1]]) != 'nan':
+                restitle = 'US-Developing countries, unspecified-' + rpartOrgText2 + '-' + \
+                           str(resultsfile["Category Name"][resultgroup[1]]) + '-' + \
+                           str(resultsfile["Sector Name"][resultgroup[1]])
+            else:
+                restitle = 'US-Developing countries, unspecified-' + rpartOrgText2 + '-None Found'
+        resTitleText.append(restitle)
+        resTitleText.append('')
+        resDescText.append(str(resultsfile["Sector Description"][resultgroup[1]]))
+        resDescText.append('')
+
+        try:
+            ractivityStatusCode = str(int(resultsfile["Activity Status"][resultgroup[1]]))
+        except ValueError:
+            ractivityStatusCode = '1'
+        try:
+           # Award Transaction Date?
+            risodatetime = str(int(resultsfile["Indicator Start Date"][resultgroup[1]]))  # Award Transaction Date
+            risodatetimeformat = risodatetime[0:4] + '-' + risodatetime[4:6] + '-' + \
+                                 risodatetime[6:8]
+            ractivityDateText = 'Activity date not available, using Result Indicator Period Start date'
+        except ValueError:
+            risodatetimeformat = str(int(datetime.datetime.utcnow().strftime('%Y')) - 1) + '-10-01'
+            ractivityDateText = 'Activity date not available, using Result Indicator Period Start date'
+        ractivityDateType = '2'
+
+        # Create the Element Tree for the sector
+        active = SubElement(iatiactivity, 'iati-activity', hierarchy=hierarchy,
+                            last_h_updated_h_datetime=date,
+                            xml__lang=langList[0], default_h_currency=currency)
+        identi = SubElement(active, 'iati-identifier')
+        identi.text = iden
+        report_org = SubElement(active, 'reporting-org', ref=repOrgR,
+                                type=repOrgT)
+        narrative = SubElement(report_org, 'narrative')
+        narrative.text = repText
+        resultTitle = SubElement(active, 'title')
+        lang_loop(resultTitle, resLangList, resTitleText)
+        resultDesc = SubElement(active, 'description')
+        lang_loop(resultDesc, resLangList, resDescText)
+        resPartOrg1 = SubElement(active, 'participating-org',
+                                 ref=rpartOrgRef1, role=rpartOrgRole1,
+                                 type=rpartOrgType1)
+        narrative = SubElement(resPartOrg1, 'narrative')
+        narrative.text = rpartOrgText1
+        resPartOrg2 = SubElement(active, 'participating-org',
+                                 ref=rpartOrgRef2, role=rpartOrgRole2,
+                                 type=rpartOrgType2)
+        narrative = SubElement(resPartOrg2, 'narrative')
+        narrative.text = rpartOrgText2
+        SubElement(active, 'activity-status', code=ractivityStatusCode)
+        ractivity_date = SubElement(active, 'activity-date',
+                                   iso_h_date=risodatetimeformat,
+                                   type=ractivityDateType)
+        narrative = SubElement(ractivity_date, 'narrative')
+        narrative.text = ractivityDateText
+
+        # Results Loop Here
+        resultit = 0
+        for result in resultgroup:
+            if resultit > 0:
+                resulttype = str(int(resultsfile["Result Type"][result]))  # 1 = output, 2 = outcome, 3 = impact, 4 = other
+                resulttext = str(resultsfile["Result Title"][result])
+                meas = str(int(resultsfile["Measure"][result]))  # 1 = unit, 2 = percentage
+                indicatortitle = str(resultsfile["Indicator Title"][result])
+                indstart = str(resultsfile["Indicator Start Date"][result])
+                indicatorstart = indstart[0:4] + '-' + indstart[4:6] + '-' + indstart[6:8]
+                indend = str(resultsfile["Indicator End Date"][result])
+                indicatorend = indend[0:4]+'-'+indend[4:6]+'-'+indend[6:8]
+                targetvalue = '{0:.2f}'.format(int(resultsfile["Target Value"][result]))
+                actualvalue = '{0:.2f}'.format(int(resultsfile["Actual Value"][result]))
+
+                resact = SubElement(active, 'result', type=resulttype)
+                rest = SubElement(resact, 'title')
+                narrative = SubElement(rest, 'narrative')
+                if resulttext != 'nan':
+                    narrative.text = resulttext
+                indicator = SubElement(resact, 'indicator', measure=meas)
+                indtitle = SubElement(indicator, 'title')
+                narrative = SubElement(indtitle, 'narrative')
+                narrative.text = indicatortitle
+                indperiod = SubElement(indicator, 'period')
+                indperiods = SubElement(indperiod, 'period-start', iso_h_date=indicatorstart)
+                indperiode = SubElement(indperiod, 'period-end', iso_h_date=indicatorend)
+                targetv = SubElement(indperiod, 'target', value=targetvalue)
+                actualv = SubElement(indperiod, 'actual', value=actualvalue)
+            resultit += 1
+    return
+
+
 # Prompt user for filename
-filetoopen = input("What is the name of the source file? ")
+filetoopen = input("What is the name of the omb source file? ")
 curtime = time.time()
 print('Opening OMB file...')
 # Read the file
 try:
     omb = pandas.read_excel(filetoopen, encoding='utf-8')
 except:
-    sys.exit("File does not exist.")
+    sys.exit("OMB file does not exist.")
 # Output the number of rows
 print('Total rows: {0}'.format(len(omb)))
 # See which headers are available
 print(list(omb))
+
+# Prompt user for filename
+results = ''
+resultsopen = input("What is the name of the results source file? (If no results, then hit enter) ")
+if resultsopen != '':
+    print('Opening Results file...')
+    # Read the file
+    try:
+        results = pandas.read_excel(resultsopen, encoding='utf-8')
+    except:
+        sys.exit("Results file does not exist.")
+    # Output the number of rows
+    print('Total rows: {0}'.format(len(results)))
+    # See which headers are available
+    print(list(results))
 
 opentime = time.time() - curtime
 print('Converting format...')
@@ -239,7 +445,6 @@ print('Converting format...')
 # Variable creation
 idlist, idawards, isolist = id_loop(omb)
 ombActs = activities_loop(idlist)
-date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 # TODO: Change this to 2.02 once we implement the 2.02 changes. (Humanitarian)
 ver = '2.01'
 fasite = 'http://www.foreignassistance.gov/web/IATI/usg-extension'
@@ -294,7 +499,7 @@ for act in ombActs:
     titleText.append('')
     # descText.append(str(omb["Implementing Mechanism Purpose Statement"][act]))
     # TODO: Get a description of each different category
-    descText.append('This is a place holder category description.')
+    descText.append(catdesc(ident[-2:]))
     descText.append('')
 
     try:
@@ -308,7 +513,7 @@ for act in ombActs:
             isodatetime[6:8]
         activityDateText = ''
     except ValueError:
-            isodatetime = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
+            isodatetimeformat = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
             activityDateText = 'No valid date could be found for transaction.'
     activityDateType = '2'
     activityScopeCode = '4'
@@ -352,6 +557,10 @@ for act in ombActs:
         relType = '2'
         relRef = idawards[rel]
         SubElement(activity, 'related-activity', type=relType, ref=relRef)
+
+    # TODO: Make sure the input is correct for idlist
+    if resultsopen != '':
+        results_loop(results, omb, ident, activities)
 
     # Begin creating the activities
     for relact in relatedList:
@@ -411,7 +620,7 @@ for act in ombActs:
             activityStatusCode = str(int(omb["Reporting Status"][relact]))
         except ValueError:
             activityStatusCode = '1'
-        # TODO: Check for dates to determine between planned and actual
+
         # All dates are always "actual". There are no "planned" dates.
         try:
             isodatetime = str(int(omb["Start Date"][act]))
@@ -493,7 +702,7 @@ for act in ombActs:
 
         activity_status = SubElement(activity, 'activity-status',
                                      code=activityStatusCode)
-        # TODO: Implement planned start date
+
         # All dates are always "actual". There are no "planned" dates.
         # activity_planstart = SubElement(activity, 'activity-date',
         #                            iso_h_date=isodatetimeformatstart,
@@ -504,7 +713,7 @@ for act in ombActs:
         if activityStartDateText:
             narrative = SubElement(activity_startdate, 'narrative')
             narrative.text = activityStartDateText
-        # TODO: Implement planned end date
+
         # All dates are always "actual". There are no "planned" dates.
         # activity_planend = SubElement(activity, 'activity-date',
         #                               iso_h_date=isodatetimeformatend,
@@ -608,7 +817,6 @@ for act in ombActs:
                                              code=tiedCode)
 
         # Budget block
-        # FIX: Grab relevant info from the new sources and set vals.
         if budgetAmount != '0.00':
             budget = SubElement(activity, 'budget')
             SubElement(budget, 'period-start', iso_h_date=periodStartDate)
@@ -784,7 +992,6 @@ for act in ombActs:
 
         # Populate the document links
         docsList = docs_loop(omb, relact)
-        print(docsList)
         for doc in docsList:
             # FIX: url and format get flipped somehow?
             document = SubElement(activity, 'document-link', format=doc[2], url=doc[1])
