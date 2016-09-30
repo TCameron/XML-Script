@@ -8,8 +8,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "9-13-2016"
-__version__ = "0.16"
+__date__ = "9-29-2016"
+__version__ = "0.17"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -888,7 +888,10 @@ for ombActs in ombgrouping:
                         periodEndDate = str(datetime.datetime.utcnow().strftime('%Y')) + '-09-30'
                     budgetValueDate = periodStartDate
                     try:
-                        budgetAmount = '{0:.2f}'.format(omb["Total allocations"][relact])
+                        if str(int(omb["Total allocations"][relact])) != 'nan':
+                            budgetAmount = '{0:.2f}'.format(omb["Total allocations"][relact])
+                        else:
+                            budgetAmount = '0.00'
                     except ValueError:
                         budgetAmount = '0.00'
 

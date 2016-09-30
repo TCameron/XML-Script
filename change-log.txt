@@ -1,5 +1,15 @@
 Change Log for IATI XML Production Script
 
+September 29, 2016, Version 0.16:
+	Additions:
+	
+	Changes:
+
+	Fixes:
+		Added checking for 'nan' in <budget>
+
+	Future:
+
 September 13, 2016, Version 0.16:
 	Additions:
 		Added in State Locations field into script at the request of State.
