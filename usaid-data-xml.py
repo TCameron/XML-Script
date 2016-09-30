@@ -8,8 +8,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "7-11-2016"
-__version__ = "0.12"
+__date__ = "7-19-2016"
+__version__ = "0.13"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -548,7 +548,6 @@ for ombActs in ombgrouping:
                 titleText.append(title)
                 titleText.append('')
                 # descText.append(str(omb["Implementing Mechanism Purpose Statement"][act]))
-                # TODO: Get a description of each different category
                 descText.append(catdesc(ident[-2:]))
                 descText.append('')
 
@@ -862,9 +861,21 @@ for ombActs in ombgrouping:
                     except ValueError:
                         tiedCode = '0'
                     # This is for error checking
-                    periodStartDate = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
-                    periodEndDate = str(datetime.datetime.utcnow().strftime('%Y')) + '-09-30'
-                    budgetValueDate = str(datetime.datetime.utcnow().strftime('%Y')) + '-09-30'
+                    if str(int(omb["Budget Start Date"][relact])) != 'nan':
+                        periodStart = \
+                            str(int(omb["Budget Start Date"][relact]))
+                        periodStartDate = periodStart[0:4] + '-' + periodStart[4:6] + '-' +\
+                            periodStart[6:8]
+                    else:
+                        periodStartDate = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
+                    if str(int(omb["Budget End Date"][relact])) != 'nan':
+                        periodEnd = \
+                            str(int(omb["Budget End Date"][relact]))
+                        periodEndDate = periodEnd[0:4] + '-' + periodEnd[4:6] + '-' +\
+                            periodEnd[6:8]
+                    else:
+                        periodEndDate = str(datetime.datetime.utcnow().strftime('%Y')) + '-09-30'
+                    budgetValueDate = periodStartDate
                     try:
                         budgetAmount = '{0:.2f}'.format(int(omb["Total allocations"][relact]))
                     except ValueError:
