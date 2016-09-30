@@ -1,5 +1,28 @@
 Change Log for IATI XML Production Script
 
+June 20, 2016, Version 0.10:
+	Additions:
+		Implemented splitting of XML files into recipient countries and regions.
+
+	Changes:
+
+	Fixes:
+
+	Future:
+
+June 10, 2016, Version 0.9:
+	Additions:
+		Implentation of the ability to report results in hierarchy 2.
+			This will require a new results file to be input into the system.
+		Hierarchy 1 category descriptions are checked via a function method.
+
+	Changes:
+
+	Fixes:
+		Added error checking for the Implementing Agent Type, in cases of field being blank.
+
+	Future:
+
 May 26, 2016, Version 0.8:
 	Additions:
 
