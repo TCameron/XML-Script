@@ -1,5 +1,15 @@
 Change Log for IATI XML Production Script
 
+July 19, 2016, Version 0.13:
+	Additions:
+
+	Changes:
+		Refactored budgetStartDate, budgetEndDate, and budgetValueDate to better match the IATI standard
+
+	Fixes:
+	
+	Future:
+
 July 11, 2016, Version 0.12:
 	Additions:
 
