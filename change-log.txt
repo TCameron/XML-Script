@@ -1,6 +1,26 @@
 Change Log for IATI XML Production Script
 
-September 29, 2016, Version 0.16:
+December 7, 2016, Version 0.19:
+	Additions:
+		Added ability to report contract links within <document-link>
+
+	Changes:
+
+	Fixes:
+
+	Future:
+
+November 16, 2016, Version 0.18:
+	Additions:
+
+	Changes:
+
+	Fixes:
+		Added in checking for improper printing of Cote d'Ivoire.
+
+	Future:
+
+September 29, 2016, Version 0.17:
 	Additions:
 	
 	Changes:
