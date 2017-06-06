@@ -10,8 +10,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "01-11-2016"
-__version__ = "0.20"
+__date__ = "05-24-2016"
+__version__ = "0.21"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -37,7 +37,7 @@ def id_loop(ombfile):
     ids = list()
     idswawards = list()
     isos = list()
-    # USAID is identified as US-1 within PWYF.
+    # USAID is identified as US-GOV-1 within PWYF.
     code = '1'
     for i in range(0, len(ombfile.index)):
         try:
@@ -63,7 +63,7 @@ def id_loop(ombfile):
         except ValueError:
             categorytype = '90'
         awardid = str(omb["implementing_mechanism_id"][i])
-        entry = 'US' + '-' + code + '-' + country + '-' + categorytype
+        entry = 'US-GOV' + '-' + code + '-' + country + '-' + categorytype
         ids.append(entry)
         entry += '-' + awardid
         idswawards.append(entry)
@@ -305,6 +305,27 @@ def catdesc(cat):
     return catdescription
 
 
+def orgnumber(org):
+    """
+    Used to return the organization's registered IATI code.
+    :param org: The organization to pull the code for
+    :return: The organization's IATI code
+    """
+    if org == 'Department of Agriculture' or org == 'US Department of Agriculture' or org == 'Dept of Agriculture':
+        orgcode = 'US-GOV-2'
+    elif org == 'US Department of Treasury':
+        orgcode = 'US-GOV-6'
+    elif org == 'US Department of State' or org == 'State Department' or org == 'Dept of State':
+        orgcode = 'US-GOV-11'
+    elif org == 'Millennium Challenge Corporation' or org == 'MCC':
+        orgcode = 'US-GOV-18'
+    elif org == 'Exec Office of the President':
+        orgcode = 'US-GOV-30'
+    else:
+        orgcode = 'US-GOV-1'
+    return orgcode
+
+
 def sectors_loop(recip, sects, cat):
     """
     Find which activities are the main ones to set as hierarchy 1.
@@ -316,7 +337,7 @@ def sectors_loop(recip, sects, cat):
     sectors = list()
     actives = list()
     for i in range(0, len(sects)):
-        if "US-1-" + str(recip[i]) + "-" + str(sects[i])[:2] == cat:
+        if "US-GOV-1-" + str(recip[i]) + "-" + str(sects[i])[:2] == cat:
             if str(sects[i])[:2] == cat[-2:]:  # This ensures only groups returned are current category.
                 if str(sects[i]) not in actives:
                     actives.append(str(sects[i]))
@@ -346,14 +367,14 @@ def results_loop(resultsfile, curcat, iatiactivity):
         currency = 'USD'
         iden = curcat + "-" + str(resultgroup[0])
         print(iden)
-        repOrgR = 'US-1'
+        repOrgR = 'US-GOV-1'
         repOrgT = '10'  # Government
         repText = 'USA'
-        rpartOrgRef1 = 'US-USAGOV'
+        rpartOrgRef1 = 'US-GOV-1'
         rpartOrgRole1 = '1'
         rpartOrgText1 = 'USA'
         rpartOrgType1 = '10'  # Government
-        rpartOrgRef2 = 'US-1'  # USAID
+        rpartOrgRef2 = 'US-GOV-1'  # USAID
         rpartOrgRole2 = '2'
         rpartOrgText2 = 'U.S. Agency for International Development'
         rpartOrgType2 = '10'  # Government
@@ -513,7 +534,7 @@ h1acts = activities_loop(idlist)
 # This will turn on the splitting of the file via recipient if you uncomment this and tab everything after these.
 ombgrouping = group_split(omb)
 for ombActs in ombgrouping:
-
+    print(ombActs)
     # TODO: Change this to 2.02 once we implement the 2.02 changes.
     # http://iatistandard.org/201/upgrades/decimal-upgrade-to-2-02/2-02-changes/
     ver = '2.01'
@@ -535,14 +556,14 @@ for ombActs in ombgrouping:
                 langList = ['en']
                 cur = 'USD'
                 ident = idlist[act]
-                repOrgRef = 'US-USAGOV'
+                repOrgRef = 'US-GOV-1'
                 repOrgType = '10'  # Government
-                repOrgText = 'USA'
-                partOrgRef1 = 'US-USAGOV'
+                repOrgText = 'U.S. Agency for International Development'
+                partOrgText1 = str(omb["appropriated_agency"][act])
+                partOrgRef1 = orgnumber(partOrgText1)
                 partOrgRole1 = '1'
-                partOrgText1 = 'USA'
                 partOrgType1 = '10'  # Government
-                partOrgRef2 = 'US-1'  # USAID
+                partOrgRef2 = 'US-GOV-1'  # USAID
                 partOrgRole2 = '2'
                 partOrgText2 = 'U.S. Agency for International Development'
                 partOrgType2 = '10'  # Government
@@ -555,6 +576,8 @@ for ombActs in ombgrouping:
                         name = str(omb["dac_country_name"][act])
                         if name == "CÃ´te dâ€™Ivoire":
                             name = "Côte d'Ivoire"
+                        elif name == "Lao Peopleâ€™s Democratic Republic":
+                            name = "Lao People's Democratic Republic"
                         title = 'US-' + name + '-' +\
                                 partOrgText2 + '-' +\
                                 str(omb["category_name"][act])
@@ -562,6 +585,8 @@ for ombActs in ombgrouping:
                         name = str(omb["dac_country_name"][act])
                         if name == "CÃ´te dâ€™Ivoire":
                             name = "Côte d'Ivoire"
+                        elif name == "Lao Peopleâ€™s Democratic Republic":
+                            name = "Lao People's Democratic Republic"
                         title = 'US-' + name + '-' + \
                                 partOrgText2 + '-None Found'
                 else:
@@ -643,9 +668,9 @@ for ombActs in ombgrouping:
                     cur = 'USD'
                     countryinit = isolist[relact]
                     identity = idawards[relact]
-                    repOrgRef = 'US-USAGOV'
+                    repOrgRef = 'US-GOV-1'
                     repOrgType = '10'  # Government
-                    repOrgText = 'USA'
+                    repOrgText = 'U.S. Agency for International Development'
                     # These will need to be looped through and placed into narratives.
                     titleText = list()
                     descText = list()
@@ -653,38 +678,22 @@ for ombActs in ombgrouping:
                     titleText.append('')
                     descText.append(str(omb["iati_narr_lvl_3"][relact]))
                     descText.append('')
-                    partOrgRef = 'US-USAGOV'
+                    partOrgText = str(omb["appropriated_agency"][relact])
+                    partOrgRef = orgnumber(partOrgText)
                     partOrgRole = '1'
-                    partOrgText = 'USA'
-                    partOrgRef2 = 'US-1'
+                    partOrgRef2 = 'US-GOV-1'
                     partOrgRole2 = '2'
                     partOrgText2 = 'U.S. Agency for International Development'
                     partOrgType2 = '10'
                     partOrgRole3 = '3'
-                    partOrgText3 = str(omb["appropriated_agency"][relact])
+                    partOrgText3 = 'U.S. Agency for International Development'
                     # These may change, depending on input.
                     # TODO: If more organizations become used, they will need impl.
-                    if partOrgText3 == "State Department":
-                        partOrgRef3 = 'US-11'
-                    elif partOrgText3 == "Department of Agriculture":
-                        partOrgRef3 = 'US-2'
-                    elif partOrgText3 == "Millennium Challenge Corporation":
-                        partOrgRef3 = 'US-18'
-                    else:
-                        partOrgRef3 = 'US-1'  # USAID
+                    partOrgRef3 = orgnumber(partOrgText3)
                     partOrgType3 = '10'
                     partOrgRole4 = '4'
                     partOrgText4 = str(omb["implementing_agent"][relact])
-                    if partOrgText4 == "US Department of State":
-                        partOrgRef4 = 'US-11'
-                    elif partOrgText4 == "US Department of Treasury":
-                        partOrgRef4 = 'US-6'
-                    elif partOrgText4 == "US Department of Agriculture":
-                        partOrgRef4 = 'US-2'
-                    elif partOrgText4 == "USAID Mission" or partOrgText4 == "USAID/Washington":
-                        partOrgRef4 = 'US-1'
-                    else:
-                        partOrgRef4 = ''
+                    partOrgRef4 = orgnumber(partOrgText4)
                     try:
                         partOrgType4 = str(int(omb["implementing_agent_type"][relact]))
                     except ValueError:
@@ -885,21 +894,25 @@ for ombActs in ombgrouping:
                         tiedCode = '0'
                     # This is for error checking
                     try:
-                        if str(int(omb["budget_start_date"][relact])) != 'nan':
+                        if str(int(omb["start_date"][relact])) != 'nan':
                             periodStart = \
-                                str(int(omb["budget_start_date"][relact]))
+                                str(int(omb["start_date"][relact]))
                             periodStartDate = periodStart[0:4] + '-' + periodStart[4:6] + '-' +\
                                 periodStart[6:8]
                     except ValueError:
-                        periodStartDate = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
+                        periodStartDate = str(int(omb["beginning_fiscal_funding_year"][relact])) + '-10-01'
                     try:
-                        if str(int(omb["budget_end_date"][relact])) != 'nan':
+                        if str(int(omb["end_date"][relact])) != 'nan':
                             periodEnd = \
-                                str(int(omb["budget_end_date"][relact]))
+                                str(int(omb["end_date"][relact]))
                             periodEndDate = periodEnd[0:4] + '-' + periodEnd[4:6] + '-' +\
                                 periodEnd[6:8]
                     except ValueError:
-                        periodEndDate = str(datetime.datetime.utcnow().strftime('%Y')) + '-09-30'
+                        try:
+                            if str(int(omb["ending_fiscal_funding_year"][relact])) != 'nan':
+                                periodEndDate = str(int(omb["ending_fiscal_funding_year"][relact])) + '-09-30'
+                        except ValueError:
+                            periodEndDate = ''
                     budgetValueDate = periodStartDate
                     try:
                         if str(int(omb["total_allocations"][relact])) != 'nan':
@@ -1135,6 +1148,8 @@ for ombActs in ombgrouping:
                     stateloc = str(omb["state_location"][relact])
                     if stateloc == "CÃ´te d'Ivoire":
                         stateloc = "Côte d'Ivoire"
+                    elif stateloc == "Lao Peopleâ€™s Democratic Republic":
+                        stateloc = "Lao People's Democratic Republic"
 
                     if (duns != 'nan'):
                         dunselement = SubElement(activity, 'usg__duns-number')
@@ -1160,7 +1175,10 @@ for ombActs in ombgrouping:
 
     if not os.path.exists('export/' + time.strftime("%m-%d-%Y") + '/'):
         os.makedirs('export/' + time.strftime("%m-%d-%Y") + '/')
-    output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-'+ombActs[0]+'.xml', 'w', encoding='utf-8')
+    # This line is for country names
+    output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-'+str(omb["state_location"][int(ombActs[1])])+'.xml', 'w', encoding='utf-8')
+    # This line is for country codes
+    # output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-'+ombActs[0]+'.xml', 'w', encoding='utf-8')
     output_file.write(prettify(activities).replace("__", ":").replace("_h_", "-"))
     output_file.close()
     finaltime = time.time() - curtime

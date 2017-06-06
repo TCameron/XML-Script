@@ -1,5 +1,19 @@
 Change Log for IATI XML Production Script
 
+May 24, 2017, Version 0.21:
+  Additions:
+    Added ability to switch between using Country Name and ISO Codes for naming of XMLs
+
+  Changes:
+    Changed Funding Organization to use the appropriated_agency column
+    Changed Extending Organization to always be USAID
+    Added function to check for Organization Code, instead of it being done in-line
+
+  Fixes:
+  	Fixed the date printing for budget period start and end
+
+  Future:
+
 January 11, 2017, Version 0.20:
 	Additions:
 		Added ability to zip files automatically
