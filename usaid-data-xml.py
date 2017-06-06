@@ -8,8 +8,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "9-29-2016"
-__version__ = "0.17"
+__date__ = "11-16-2016"
+__version__ = "0.18"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -48,9 +48,13 @@ def id_loop(ombfile):
                     country = '998'
             else:
                 # This is due to Namibia's code being "NA", but numpy counts "NA" as not applicable, so it gets skipped
-                if str(ombfile["ISO Alpha Code"][i] == 'NAM'):  # Being used as a temporary stopgap
-                    country = 'NA'
-                else:
+                try:
+                    namibia = str(int(ombfile["DAC Country Code"][i]))
+                    if namibia == '275':  # Being used as a temporary stopgap
+                        country = 'NA'
+                    else:
+                        country = '998'
+                except ValueError:
                     country = '998'
         try:
             categorytype = str(int(omb["U.S. Government Sector Code"][i]))[0:2]
@@ -82,11 +86,15 @@ def group_split(ombfile):
                 try:
                     country = str(ombfile["ISO Alpha Code"][i])
                 except ValueError:
-                    country = 'XXX'
+                    country = '998'
             else:
-                if str(ombfile["ISO Alpha Code"][i] == 'NAM'):  # Being used as a temporary stopgap
-                    country = 'NA'
-                else:
+                try:
+                    namibia = str(int(ombfile["DAC Country Code"][i]))
+                    if namibia == '275':  # Being used as a temporary stopgap
+                        country = 'NA'
+                    else:
+                        country = '998'
+                except ValueError:
                     country = '998'
         if country not in actives:
             actives.append(country)
@@ -574,7 +582,7 @@ for ombActs in ombgrouping:
                         isodatetimeformat = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
                         activityDateText = 'No valid date could be found for transaction.'
                 activityDateType = '2'
-                activityScopeCode = '4'
+                activityScopeCode = str(int(omb["Activity Scope"][act]))
 
                 # Create the Element Tree for the activity grouping
                 activity = SubElement(activities, 'iati-activity', hierarchy=hier,
@@ -635,7 +643,7 @@ for ombActs in ombgrouping:
                     descText = list()
                     titleText.append(str(omb["Implementing Mechanism Title"][relact]))
                     titleText.append('')
-                    descText.append(str(omb["IATI Narrative - Level 3"][relact]))
+                    descText.append(str(omb["Award Transaction - Description"][relact]))
                     descText.append('')
                     partOrgRef = 'US-USAGOV'
                     partOrgRole = '1'
@@ -645,7 +653,7 @@ for ombActs in ombgrouping:
                     partOrgText2 = 'U.S. Agency for International Development'
                     partOrgType2 = '10'
                     partOrgRole3 = '3'
-                    partOrgText3 = str(omb["Appropriated Agency"][act])
+                    partOrgText3 = str(omb["Appropriated Agency"][relact])
                     # These may change, depending on input.
                     # TODO: If more organizations become used, they will need impl.
                     if partOrgText3 == "Dept of State":
@@ -658,7 +666,7 @@ for ombActs in ombgrouping:
                         partOrgRef3 = 'US-1'  # USAID
                     partOrgType3 = '10'
                     partOrgRole4 = '4'
-                    partOrgText4 = str(omb["Implementing Agent"][act])
+                    partOrgText4 = str(omb["Implementing Agent"][relact])
                     if partOrgText4 == "US Department of State":
                         partOrgRef4 = 'US-11'
                     elif partOrgText4 == "US Department of Treasury":
@@ -670,7 +678,7 @@ for ombActs in ombgrouping:
                     else:
                         partOrgRef4 = ''
                     try:
-                        partOrgType4 = str(int(omb["Implementing Agent Type"][act]))
+                        partOrgType4 = str(int(omb["Implementing Agent Type"][relact]))
                     except ValueError:
                         partOrgType4 = ''
                     try:
@@ -680,7 +688,7 @@ for ombActs in ombgrouping:
 
                     # All dates are always "actual". There are no "planned" dates.
                     try:
-                        isodatetime = str(int(omb["Start Date"][act]))
+                        isodatetime = str(int(omb["Start Date"][relact]))
                         isodatetimeformatstart = isodatetime[0:4] + '-' +\
                             isodatetime[4:6] + '-' + isodatetime[6:8]
                         activityStartDateText = ''
@@ -689,7 +697,7 @@ for ombActs in ombgrouping:
                         activityStartDateText = 'No valid date could be found for' \
                                                 ' activity.'
                     try:
-                        isodatetime = str(int(omb["End Date"][act]))
+                        isodatetime = str(int(omb["End Date"][relact]))
                         isodatetimeformatend = isodatetime[0:4] + '-' + isodatetime[4:6] +\
                             '-' + isodatetime[6:8]
                         activityEndDateText = ''
@@ -701,7 +709,7 @@ for ombActs in ombgrouping:
                     activityDateTypeStart = '2'
                     activityDateTypePlanEnd = '3'
                     activityDateTypeEnd = '4'
-                    activityScopeCode = '4'
+                    activityScopeCode = str(int(omb["Activity Scope"][relact]))
                     try:
                         signdate = \
                             str(int(omb["Implementing Mechanism Signing Date"][relact]))
@@ -981,23 +989,23 @@ for ombActs in ombgrouping:
                                 value.text = valueAmount
 
                                 try:
-                                    disbChan = str(int(omb["Disbursement Channel"][relact]))
+                                    disbChan = str(int(omb["Disbursement Channel"][trans]))
                                 except ValueError:
                                     disbChan = '0'
 
                                 # Sectors
                                 try:
-                                    dacCode = str(int(omb["DAC Purpose Code"][relact]))
+                                    dacCode = str(int(omb["DAC Purpose Code"][trans]))
                                 except ValueError:
                                     dacCode = '0'
                                 try:
-                                    sectorCode = str(int(omb["U.S. Government Sector Code"][relact]))
+                                    sectorCode = str(int(omb["U.S. Government Sector Code"][trans]))
                                 except ValueError:
                                     sectorCode = '0'
                                 dacVocab = '1'
-                                dacText = str(omb["DAC Purpose Name"][relact])
+                                dacText = str(omb["DAC Purpose Name"][trans])
                                 sectorVocab = '99'
-                                sectorText = str(omb["Aid Type Name"][relact])
+                                sectorText = str(omb["Aid Type Name"][trans])
 
                                 # Create the element tree
                                 disburseChannel = SubElement(transaction, 'disbursement-channel', code=disbChan)
@@ -1039,23 +1047,23 @@ for ombActs in ombgrouping:
                                 value.text = valueAmount
 
                                 try:
-                                    disbChan = str(int(omb["Disbursement Channel"][relact]))
+                                    disbChan = str(int(omb["Disbursement Channel"][trans]))
                                 except ValueError:
                                     disbChan = '0'
 
                                 # Sectors
                                 try:
-                                    dacCode = str(int(omb["DAC Purpose Code"][relact]))
+                                    dacCode = str(int(omb["DAC Purpose Code"][trans]))
                                 except ValueError:
                                     dacCode = '0'
                                 try:
-                                    sectorCode = str(int(omb["U.S. Government Sector Code"][relact]))
+                                    sectorCode = str(int(omb["U.S. Government Sector Code"][trans]))
                                 except ValueError:
                                     sectorCode = '0'
                                 dacVocab = '1'
-                                dacText = str(omb["DAC Purpose Name"][relact])
+                                dacText = str(omb["DAC Purpose Name"][trans])
                                 sectorVocab = '99'
-                                sectorText = str(omb["Aid Type Name"][relact])
+                                sectorText = str(omb["Aid Type Name"][trans])
 
                                 # Create the element tree
                                 disburseChannel = SubElement(transaction, 'disbursement-channel', code=disbChan)
@@ -1104,9 +1112,14 @@ for ombActs in ombgrouping:
                                iso_h_date=signdateformat)
 
                     # Extra fields requested by State
-                    duns = str(omb["Implementing Agent's DUNS Number"][relact])
+                    try:
+                        duns = str(int(omb["Implementing Agent's DUNS Number"][relact]))
+                    except ValueError:
+                        duns = 'nan'
                     tec = '{0:.2f}'.format(omb["TEC1"][relact])
                     stateloc = str(omb["State Location"][relact])
+                    if stateloc == "CÃ´te d'Ivoire":
+                        stateloc = "Côte d'Ivoire"
 
                     if (duns != 'nan'):
                         dunselement = SubElement(activity, 'usg__duns-number')
