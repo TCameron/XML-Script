@@ -1,6 +1,8 @@
 import datetime
 import time
 import sys
+import shutil
+import os
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from xml.dom import minidom
@@ -8,8 +10,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "11-16-2016"
-__version__ = "0.18"
+__date__ = "01-11-2016"
+__version__ = "0.20"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -39,17 +41,17 @@ def id_loop(ombfile):
     code = '1'
     for i in range(0, len(ombfile.index)):
         try:
-            country = str(int(ombfile["DAC Regional Code"][i]))
+            country = str(int(ombfile["dac_regional_code"][i]))
         except ValueError:
-            if str(ombfile["ISO Alpha Code"][i]) != 'nan':
+            if str(ombfile["iso_alpha_code"][i]) != 'nan':
                 try:
-                    country = str(ombfile["ISO Alpha Code"][i])
+                    country = str(ombfile["iso_alpha_code"][i])
                 except ValueError:
                     country = '998'
             else:
                 # This is due to Namibia's code being "NA", but numpy counts "NA" as not applicable, so it gets skipped
                 try:
-                    namibia = str(int(ombfile["DAC Country Code"][i]))
+                    namibia = str(int(ombfile["dac_country_code"][i]))
                     if namibia == '275':  # Being used as a temporary stopgap
                         country = 'NA'
                     else:
@@ -57,10 +59,10 @@ def id_loop(ombfile):
                 except ValueError:
                     country = '998'
         try:
-            categorytype = str(int(omb["U.S. Government Sector Code"][i]))[0:2]
+            categorytype = str(int(omb["us_sector_code"][i]))[0:2]
         except ValueError:
             categorytype = '90'
-        awardid = str(omb["Implementing Mechanism ID"][i])
+        awardid = str(omb["implementing_mechanism_id"][i])
         entry = 'US' + '-' + code + '-' + country + '-' + categorytype
         ids.append(entry)
         entry += '-' + awardid
@@ -79,17 +81,17 @@ def group_split(ombfile):
     ids = list()
     for i in range(0, len(ombfile.index)):
         try:
-            country = str(int(ombfile["DAC Regional Code"][i]))
+            country = str(int(ombfile["dac_regional_code"][i]))
         except ValueError:
-            print(str(ombfile["ISO Alpha Code"][i]))
-            if str(ombfile["ISO Alpha Code"][i]) != 'nan':
+            print(str(ombfile["iso_alpha_code"][i]))
+            if str(ombfile["iso_alpha_code"][i]) != 'nan':
                 try:
-                    country = str(ombfile["ISO Alpha Code"][i])
+                    country = str(ombfile["iso_alpha_code"][i])
                 except ValueError:
                     country = '998'
             else:
                 try:
-                    namibia = str(int(ombfile["DAC Country Code"][i]))
+                    namibia = str(int(ombfile["dac_country_code"][i]))
                     if namibia == '275':  # Being used as a temporary stopgap
                         country = 'NA'
                     else:
@@ -167,9 +169,9 @@ def location_loop(ombfile, award):
     i = 1
     while i:
         try:
-            if str(ombfile["Subnational Location Name "+str(i)][award]) != 'nan':
-                temploc.append(str(ombfile["Subnational Location Name "+str(i)][award]))
-                temploc.append(str(ombfile["Subnational Location Coordinates "+str(i)][award]))
+            if str(ombfile["loc_name"+str(i)][award]) != 'nan':
+                temploc.append(str(ombfile["loc_name"+str(i)][award]))
+                temploc.append(str(ombfile["loc_coor"+str(i)][award]))
                 temploc.append(location_reach)
                 temploc.append(location_exact)
                 temploc.append(location_class)
@@ -197,12 +199,12 @@ def docs_loop(ombfile, award):
     j = 1
     while i:
         try:
-            if str(ombfile["Evaluation Title " + str(i)][award]) != 'nan':
-                tempdoc.append(str(ombfile["Evaluation Title " + str(i)][award]))
-                tempdoc.append(str(ombfile["Evaluation Link " + str(i)][award]))
-                tempdoc.append(str(ombfile["Evaluation File Format"][award]))
-                tempdoc.append(str(ombfile["Evaluation Document Category"][award]))
-                tempdoc.append(str(ombfile["Evaluation Language " + str(i)][award]))
+            if str(ombfile["eval_title" + str(i)][award]) != 'nan':
+                tempdoc.append(str(ombfile["eval_title" + str(i)][award]))
+                tempdoc.append(str(ombfile["eval_link" + str(i)][award]))
+                tempdoc.append(str(ombfile["eval_file_format"][award]))
+                tempdoc.append(str(ombfile["eval_category"][award]))
+                tempdoc.append(str(ombfile["eval_lang" + str(i)][award]))
                 docs.append(tempdoc)
                 tempdoc = []
                 i += 1
@@ -212,12 +214,12 @@ def docs_loop(ombfile, award):
             i = False
     while j:
         try:
-            if str(ombfile["Impact Appraisal Title " + str(j)][award]) != 'nan':
-                tempdoc.append(str(ombfile["Impact Appraisal Title " + str(j)][award]))
-                tempdoc.append(str(ombfile["Impact Appraisal Link " + str(j)][award]))
-                tempdoc.append(str(ombfile["Impact Appraisal File Format"][award]))
-                tempdoc.append(str(ombfile["Impact Appraisal Document Category"][award]))
-                tempdoc.append(str(ombfile["Impact Appraisal Language " + str(j)][award]))
+            if str(ombfile["imp_title" + str(j)][award]) != 'nan':
+                tempdoc.append(str(ombfile["imp_title" + str(j)][award]))
+                tempdoc.append(str(ombfile["imp_link" + str(j)][award]))
+                tempdoc.append(str(ombfile["imp_file_format"][award]))
+                tempdoc.append(str(ombfile["imp_category"][award]))
+                tempdoc.append(str(ombfile["imp_lang" + str(j)][award]))
                 docs.append(tempdoc)
                 tempdoc = []
                 j += 1
@@ -548,18 +550,24 @@ for ombActs in ombgrouping:
                 descText = list()
 
                 # Create the activity group's name
-                if str(omb["DAC Country Name"][act]) != 'nan':
+                if str(omb["dac_country_name"][act]) != 'nan':
                     try:
-                        title = 'US-' + str(omb["DAC Country Name"][act]) + '-' +\
+                        name = str(omb["dac_country_name"][act])
+                        if name == "CÃ´te dâ€™Ivoire":
+                            name = "Côte d'Ivoire"
+                        title = 'US-' + name + '-' +\
                                 partOrgText2 + '-' +\
-                                str(omb["U.S. Government Category Name"][act])
+                                str(omb["category_name"][act])
                     except ValueError:
-                        title = 'US-' + str(omb["DAC Country Name"][act]) + '-' + \
+                        name = str(omb["dac_country_name"][act])
+                        if name == "CÃ´te dâ€™Ivoire":
+                            name = "Côte d'Ivoire"
+                        title = 'US-' + name + '-' + \
                                 partOrgText2 + '-None Found'
                 else:
                     try:
                         title = 'US-Worldwide-' + partOrgText2 + '-' +\
-                                str(omb["U.S. Government Category Name"][act])
+                                str(omb["category_name"][act])
                     except ValueError:
                         title = 'US-Worldwide-' + partOrgText2 + '-None Found'
                 titleText.append(title)
@@ -569,12 +577,12 @@ for ombActs in ombgrouping:
                 descText.append('')
 
                 try:
-                    activityStatusCode = str(int(omb["Reporting Status"][act]))
+                    activityStatusCode = str(int(omb["award_status_code"][act]))
                 except ValueError:
                     activityStatusCode = '1'
                 try:
                     # Award Transaction Date?
-                    isodatetime = str(int(omb["Award Transaction Date"][act]))
+                    isodatetime = str(int(omb["award_transaction_date"][act]))
                     isodatetimeformat = isodatetime[0:4] + '-' + isodatetime[4:6] + '-' +\
                         isodatetime[6:8]
                     activityDateText = ''
@@ -582,7 +590,7 @@ for ombActs in ombgrouping:
                         isodatetimeformat = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
                         activityDateText = 'No valid date could be found for transaction.'
                 activityDateType = '2'
-                activityScopeCode = str(int(omb["Activity Scope"][act]))
+                activityScopeCode = str(int(omb["activity_scope"][act]))
 
                 # Create the Element Tree for the activity grouping
                 activity = SubElement(activities, 'iati-activity', hierarchy=hier,
@@ -641,9 +649,9 @@ for ombActs in ombgrouping:
                     # These will need to be looped through and placed into narratives.
                     titleText = list()
                     descText = list()
-                    titleText.append(str(omb["Implementing Mechanism Title"][relact]))
+                    titleText.append(str(omb["implementing_mechanism_title"][relact]))
                     titleText.append('')
-                    descText.append(str(omb["Award Transaction - Description"][relact]))
+                    descText.append(str(omb["iati_narr_lvl_3"][relact]))
                     descText.append('')
                     partOrgRef = 'US-USAGOV'
                     partOrgRole = '1'
@@ -653,20 +661,20 @@ for ombActs in ombgrouping:
                     partOrgText2 = 'U.S. Agency for International Development'
                     partOrgType2 = '10'
                     partOrgRole3 = '3'
-                    partOrgText3 = str(omb["Appropriated Agency"][relact])
+                    partOrgText3 = str(omb["appropriated_agency"][relact])
                     # These may change, depending on input.
                     # TODO: If more organizations become used, they will need impl.
-                    if partOrgText3 == "Dept of State":
+                    if partOrgText3 == "State Department":
                         partOrgRef3 = 'US-11'
-                    elif partOrgText3 == "Dept of Agriculture":
+                    elif partOrgText3 == "Department of Agriculture":
                         partOrgRef3 = 'US-2'
-                    elif partOrgText3 == "MCC":
+                    elif partOrgText3 == "Millennium Challenge Corporation":
                         partOrgRef3 = 'US-18'
                     else:
                         partOrgRef3 = 'US-1'  # USAID
                     partOrgType3 = '10'
                     partOrgRole4 = '4'
-                    partOrgText4 = str(omb["Implementing Agent"][relact])
+                    partOrgText4 = str(omb["implementing_agent"][relact])
                     if partOrgText4 == "US Department of State":
                         partOrgRef4 = 'US-11'
                     elif partOrgText4 == "US Department of Treasury":
@@ -678,41 +686,39 @@ for ombActs in ombgrouping:
                     else:
                         partOrgRef4 = ''
                     try:
-                        partOrgType4 = str(int(omb["Implementing Agent Type"][relact]))
+                        partOrgType4 = str(int(omb["implementing_agent_type"][relact]))
                     except ValueError:
                         partOrgType4 = ''
                     try:
-                        activityStatusCode = str(int(omb["Reporting Status"][relact]))
+                        activityStatusCode = str(int(omb["award_status_code"][relact]))
                     except ValueError:
                         activityStatusCode = '1'
 
                     # All dates are always "actual". There are no "planned" dates.
                     try:
-                        isodatetime = str(int(omb["Start Date"][relact]))
+                        isodatetime = str(int(omb["start_date"][relact]))
                         isodatetimeformatstart = isodatetime[0:4] + '-' +\
                             isodatetime[4:6] + '-' + isodatetime[6:8]
                         activityStartDateText = ''
                     except ValueError:
                         isodatetimeformatstart = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
-                        activityStartDateText = 'No valid date could be found for' \
-                                                ' activity.'
+                        activityStartDateText = str(omb["start_date_narr"][relact])
                     try:
-                        isodatetime = str(int(omb["End Date"][relact]))
+                        isodatetime = str(int(omb["end_date"][relact]))
                         isodatetimeformatend = isodatetime[0:4] + '-' + isodatetime[4:6] +\
                             '-' + isodatetime[6:8]
                         activityEndDateText = ''
                     except ValueError:
                         isodatetimeformatend = datetime.datetime.utcnow().strftime('%Y') + '-10-01'
-                        activityEndDateText = 'No valid date could be found for' \
-                                              ' activity.'
+                        activityEndDateText = str(omb["end_date_narr"][relact])
                     activityDateTypePlanStart = '1'
                     activityDateTypeStart = '2'
                     activityDateTypePlanEnd = '3'
                     activityDateTypeEnd = '4'
-                    activityScopeCode = str(int(omb["Activity Scope"][relact]))
+                    activityScopeCode = str(int(omb["activity_scope"][relact]))
                     try:
                         signdate = \
-                            str(int(omb["Implementing Mechanism Signing Date"][relact]))
+                            str(int(omb["implementing_mech_sign_date"][relact]))
                         signdateformat = signdate[0:4] + '-' + signdate[4:6] + '-' +\
                             signdate[6:8]
                     except ValueError:
@@ -793,11 +799,11 @@ for ombActs in ombgrouping:
                     # Contact information block variables
                     contactType = '1'
                     organisationText = 'U.S. Agency for International Development'
-                    personNameText = str(omb["USAID contact name"][relact])
-                    telephoneText = str(omb["USAID contact telephone"][relact])
-                    emailText = str(omb["USAID contact email"][relact])
-                    websiteText = str(omb["Activity Website"][relact])
-                    mailingText = str(omb["USAID contact address"][relact])
+                    personNameText = str(omb["usaid_name"][relact])
+                    telephoneText = str(omb["usaid_tel"][relact])
+                    emailText = str(omb["usaid_email"][relact])
+                    websiteText = str(omb["activity_website"][relact])
+                    mailingText = str(omb["usaid_addr"][relact])
 
                     # Contact information block
                     contact_info = SubElement(activity, 'contact-info', type=contactType)
@@ -829,7 +835,7 @@ for ombActs in ombgrouping:
                     recipientCountryPercentage = '100'  # This will never not be 100%
 
                     # Pre-transaction information block
-                    if str(omb["ISO Alpha Code"][relact]) == 'nan':
+                    if str(omb["iso_alpha_code"][relact]) == 'nan':
                         recipientRegionCode = countryinit
                         recipient_region = SubElement(activity, 'recipient-region',
                                                       percentage=recipientCountryPercentage,
@@ -856,48 +862,48 @@ for ombActs in ombgrouping:
                         exactness = SubElement(location, 'exactness', code=loc[3])
                         locationclass = SubElement(location, 'location-class', code=loc[4])
 
-                    if str(omb["Collaboration Type"][relact]) == 'Bilateral':
+                    if str(omb["collaboration_type"][relact]) == 'Bilateral':
                         collabCode = '1'
                     else:
                         collabCode = '2'
                     # collabCode = str(int(omb["Collaboration Type Code"][relact]))
                     try:
-                        flowType = str(int(omb["Flow Type"][relact]))
+                        flowType = str(int(omb["flow_type"][relact]))
                     except ValueError:
                         flowType = '0'
                     try:
-                        financeType = str(int(omb["Finance Type"][relact]))
+                        financeType = str(int(omb["finance_type"][relact]))
                     except ValueError:
                         financeType = '0'
                     try:
-                        aidType = str(omb["Aid Type Code"][relact])
+                        aidType = str(omb["aid_type_code"][relact])
                     except ValueError:
                         aidType = '0'
                     try:
-                        tiedCode = str(int(omb["Tying Status of Award"][relact]))
+                        tiedCode = str(int(omb["tying_status_of_award"][relact]))
                     except ValueError:
                         tiedCode = '0'
                     # This is for error checking
                     try:
-                        if str(int(omb["Budget Start Date"][relact])) != 'nan':
+                        if str(int(omb["budget_start_date"][relact])) != 'nan':
                             periodStart = \
-                                str(int(omb["Budget Start Date"][relact]))
+                                str(int(omb["budget_start_date"][relact]))
                             periodStartDate = periodStart[0:4] + '-' + periodStart[4:6] + '-' +\
                                 periodStart[6:8]
                     except ValueError:
                         periodStartDate = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
                     try:
-                        if str(int(omb["Budget End Date"][relact])) != 'nan':
+                        if str(int(omb["budget_end_date"][relact])) != 'nan':
                             periodEnd = \
-                                str(int(omb["Budget End Date"][relact]))
+                                str(int(omb["budget_end_date"][relact]))
                             periodEndDate = periodEnd[0:4] + '-' + periodEnd[4:6] + '-' +\
                                 periodEnd[6:8]
                     except ValueError:
                         periodEndDate = str(datetime.datetime.utcnow().strftime('%Y')) + '-09-30'
                     budgetValueDate = periodStartDate
                     try:
-                        if str(int(omb["Total allocations"][relact])) != 'nan':
-                            budgetAmount = '{0:.2f}'.format(omb["Total allocations"][relact])
+                        if str(int(omb["total_allocations"][relact])) != 'nan':
+                            budgetAmount = '{0:.2f}'.format(omb["total_allocations"][relact])
                         else:
                             budgetAmount = '0.00'
                     except ValueError:
@@ -942,13 +948,13 @@ for ombActs in ombgrouping:
                         # Variables that depend on entries
                         # If the disbursement has a value, set value to disbursement.
                         try:
-                            transAmount = omb["Award Transaction Value"][trans]
+                            transAmount = omb["award_transaction_value"][trans]
                             # transAmount = int(omb["Obligation Amount"][trans])
                             # transAmount = int(omb["Disbursement Amount"][trans])
                             valueAmount = '{0:.2f}'.format(transAmount)
                         except ValueError:
                             valueAmount = '0.00'
-                        transType = str(omb["Award Transaction Type"][trans])
+                        transType = str(omb["award_transaction_type"][trans])
                         if transType == "Commitment":
                             transaction_code = '2'
                         elif transType == "Disbursement":
@@ -956,22 +962,22 @@ for ombActs in ombgrouping:
                         else:
                             transaction_code = '0'
                         try:
-                            valuedate = str(int(omb["Award Transaction Date"][trans]))
+                            valuedate = str(int(omb["award_transaction_date"][trans]))
                             value_datetime = valuedate[0:4] + '-' + valuedate[4:6] + \
                                 '-' + valuedate[6:8]
                         except ValueError:
                             value_datetime = str(int(datetime.datetime.utcnow().strftime('%Y'))-1) + '-10-01'
-                        regAccCode = str(int(omb["Treasury Regular Account Code"][trans]))
-                        mainAccCode = str(int(omb["Treasury Main Account Code"][trans]))
-                        mainText = str(omb["Treasury Main Account Title"][trans])
+                        regAccCode = str(int(omb["treasury_reg_account_code"][trans]))
+                        mainAccCode = str(int(omb["treasury_main_account_code"][trans]))
+                        mainText = str(omb["treasury_main_account_title"][trans])
                         try:
                             fundingYearBegin = \
-                                str(int(omb["Beginning Fiscal Funding Year"][trans]))
+                                str(int(omb["beginning_fiscal_funding_year"][trans]))
                         except ValueError:
                             fundingYearBegin = str(int(datetime.datetime.utcnow().strftime('%Y'))-1)
                         try:
                             fundingYearEnd = \
-                                str(int(omb["Ending Fiscal Funding Year"][trans]))
+                                str(int(omb["ending_fiscal_funding_year"][trans]))
                         except ValueError:
                             fundingYearEnd = str(datetime.datetime.utcnow().strftime('%Y'))
 
@@ -989,23 +995,23 @@ for ombActs in ombgrouping:
                                 value.text = valueAmount
 
                                 try:
-                                    disbChan = str(int(omb["Disbursement Channel"][trans]))
+                                    disbChan = str(int(omb["disbursement_channel"][trans]))
                                 except ValueError:
                                     disbChan = '0'
 
                                 # Sectors
                                 try:
-                                    dacCode = str(int(omb["DAC Purpose Code"][trans]))
+                                    dacCode = str(int(omb["dac_purpose_code"][trans]))
                                 except ValueError:
                                     dacCode = '0'
                                 try:
-                                    sectorCode = str(int(omb["U.S. Government Sector Code"][trans]))
+                                    sectorCode = str(int(omb["us_sector_code"][trans]))
                                 except ValueError:
                                     sectorCode = '0'
                                 dacVocab = '1'
-                                dacText = str(omb["DAC Purpose Name"][trans])
+                                dacText = str(omb["dac_purpose_name"][trans])
                                 sectorVocab = '99'
-                                sectorText = str(omb["Aid Type Name"][trans])
+                                sectorText = str(omb["aid_type_name"][trans])
 
                                 # Create the element tree
                                 disburseChannel = SubElement(transaction, 'disbursement-channel', code=disbChan)
@@ -1047,23 +1053,23 @@ for ombActs in ombgrouping:
                                 value.text = valueAmount
 
                                 try:
-                                    disbChan = str(int(omb["Disbursement Channel"][trans]))
+                                    disbChan = str(int(omb["disbursement_channel"][trans]))
                                 except ValueError:
                                     disbChan = '0'
 
                                 # Sectors
                                 try:
-                                    dacCode = str(int(omb["DAC Purpose Code"][trans]))
+                                    dacCode = str(int(omb["dac_purpose_code"][trans]))
                                 except ValueError:
                                     dacCode = '0'
                                 try:
-                                    sectorCode = str(int(omb["U.S. Government Sector Code"][trans]))
+                                    sectorCode = str(int(omb["us_sector_code"][trans]))
                                 except ValueError:
                                     sectorCode = '0'
                                 dacVocab = '1'
-                                dacText = str(omb["DAC Purpose Name"][trans])
+                                dacText = str(omb["dac_purpose_name"][trans])
                                 sectorVocab = '99'
-                                sectorText = str(omb["Aid Type Name"][trans])
+                                sectorText = str(omb["aid_type_name"][trans])
 
                                 # Create the element tree
                                 disburseChannel = SubElement(transaction, 'disbursement-channel', code=disbChan)
@@ -1102,6 +1108,15 @@ for ombActs in ombgrouping:
                         category = SubElement(document, 'category', code=doc[3])
                         lang = SubElement(document, 'language', code=doc[4])
 
+                    # TODO: Insert code for Contract Links here
+                    # document-link code=A11
+                    # Concatenate "https://www.usaspending.gov/Pages/AdvancedSearch.aspx?k=" + field
+                    # if str(omb["stripped award"][relact]) != nan:
+                    #  contractlink = (link) + str(omb["stripped award"][relact])
+                    #  contract = subelement(activity, 'document-link', format=html, url=contractlink)
+                    #  subelement(contract, 'category', code="A11")
+                    #  subelement(contract, 'language', code="en")
+
                     relType = '1'
                     relRef = ident
                     SubElement(activity, 'related-activity', type=relType, ref=relRef)
@@ -1113,11 +1128,11 @@ for ombActs in ombgrouping:
 
                     # Extra fields requested by State
                     try:
-                        duns = str(int(omb["Implementing Agent's DUNS Number"][relact]))
+                        duns = str(int(omb["implementing_agent_duns_number"][relact]))
                     except ValueError:
                         duns = 'nan'
-                    tec = '{0:.2f}'.format(omb["TEC1"][relact])
-                    stateloc = str(omb["State Location"][relact])
+                    tec = '{0:.2f}'.format(omb["tec1"][relact])
+                    stateloc = str(omb["state_location"][relact])
                     if stateloc == "CÃ´te d'Ivoire":
                         stateloc = "Côte d'Ivoire"
 
@@ -1143,7 +1158,9 @@ for ombActs in ombgrouping:
     # This is to write to a singular file.
     # output_file = open('iati-activities-full.xml', 'w', encoding='utf-8')
 
-    output_file = open('iati-activities-'+ombActs[0]+'.xml', 'w', encoding='utf-8')
+    if not os.path.exists('export/' + time.strftime("%m-%d-%Y") + '/'):
+        os.makedirs('export/' + time.strftime("%m-%d-%Y") + '/')
+    output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-'+ombActs[0]+'.xml', 'w', encoding='utf-8')
     output_file.write(prettify(activities).replace("__", ":").replace("_h_", "-"))
     output_file.close()
     finaltime = time.time() - curtime
@@ -1153,4 +1170,6 @@ for ombActs in ombgrouping:
     print('Run time: ' + str(finaltime))
     print('Average time per main activity: ' +
           str((converttime - opentime)/len(ombActs)))
-    print('Complete!')
+print('Zipping...')
+shutil.make_archive('export-' + time.strftime("%m-%d-%Y"), 'zip', 'export/' + time.strftime("%m-%d-%Y") + '/')
+print('Complete!')

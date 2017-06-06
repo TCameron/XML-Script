@@ -1,5 +1,16 @@
 Change Log for IATI XML Production Script
 
+January 11, 2017, Version 0.20:
+	Additions:
+		Added ability to zip files automatically
+
+	Changes:
+		Changed to use the CSVs that come out of FADRS
+
+	Fixes:
+
+	Future:
+
 December 7, 2016, Version 0.19:
 	Additions:
 		Added ability to report contract links within <document-link>
