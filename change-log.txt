@@ -1,5 +1,20 @@
 Change Log for IATI XML Production Script
 
+September 20, 2017, Version 0.29:
+  Additions:
+    New functions for historical data
+    Can now mark transactions as "Humanitarian" data
+    ADS Chapters are now used as document-links for conditions for certain awards
+
+  Changes:
+    New functions were created to move the workload from the main function
+    Files are now marked as IATI Standard 2.02 compliant
+    
+  Fixes:
+
+  Future:
+        
+
 May 24, 2017, Version 0.21:
   Additions:
     Added ability to switch between using Country Name and ISO Codes for naming of XMLs
@@ -15,187 +30,187 @@ May 24, 2017, Version 0.21:
   Future:
 
 January 11, 2017, Version 0.20:
-	Additions:
-		Added ability to zip files automatically
+  Additions:
+    Added ability to zip files automatically
 
-	Changes:
-		Changed to use the CSVs that come out of FADRS
+  Changes:
+    Changed to use the CSVs that come out of FADRS
 
-	Fixes:
+  Fixes:
 
-	Future:
+  Future:
 
 December 7, 2016, Version 0.19:
-	Additions:
-		Added ability to report contract links within <document-link>
+  Additions:
+    Added ability to report contract links within <document-link>
 
-	Changes:
+  Changes:
 
-	Fixes:
+  Fixes:
 
-	Future:
+  Future:
 
 November 16, 2016, Version 0.18:
-	Additions:
+  Additions:
 
-	Changes:
+  Changes:
 
-	Fixes:
-		Added in checking for improper printing of Cote d'Ivoire.
+  Fixes:
+    Added in checking for improper printing of Cote d'Ivoire.
 
-	Future:
+  Future:
 
 September 29, 2016, Version 0.17:
-	Additions:
+  Additions:
 	
-	Changes:
+  Changes:
 
-	Fixes:
-		Added checking for 'nan' in <budget>
+  Fixes:
+    Added checking for 'nan' in <budget>
 
-	Future:
+  Future:
 
 September 13, 2016, Version 0.16:
-	Additions:
-		Added in State Locations field into script at the request of State.
-			This is located at the bottom of the loop for the individual activities.
+  Additions:
+    Added in State Locations field into script at the request of State.
+      This is located at the bottom of the loop for the individual activities.
 	
-	Changes:
+  Changes:
 
-	Fixes:
+  Fixes:
 
-	Future:
+  Future:
 
 September 6, 2016, Version 0.15:
-	Additions:
-		Added in TEC1 and DUNS Number fields into script at the request of State.
-			This is located at the bottom of the loop for the individual activities.
+  Additions:
+    Added in TEC1 and DUNS Number fields into script at the request of State.
+      This is located at the bottom of the loop for the individual activities.
 	
-	Changes:
+  Changes:
 
-	Fixes:
+  Fixes:
 
-	Future:
+  Future:
 
 August 24, 2016, Version 0.14:
-	Additions:
+  Additions:
 
-	Changes:
-		Changed budgetAmount and transAmount to take in float, instead of casting to int.
-			This fixes the missing cents issue.
-		Wrapped Budget Start Date and Budget End Date checks in try/except statements due to edge cases.
+  Changes:
+    Changed budgetAmount and transAmount to take in float, instead of casting to int.
+      This fixes the missing cents issue.
+    Wrapped Budget Start Date and Budget End Date checks in try/except statements due to edge cases.
 
-	Fixes:
+  Fixes:
 
-	Future:
+  Future:
 
 July 19, 2016, Version 0.13:
-	Additions:
+  Additions:
 
-	Changes:
-		Refactored budgetStartDate, budgetEndDate, and budgetValueDate to better match the IATI standard
+  Changes:
+    Refactored budgetStartDate, budgetEndDate, and budgetValueDate to better match the IATI standard
 
-	Fixes:
+  Fixes:
 	
-	Future:
+  Future:
 
 July 11, 2016, Version 0.12:
-	Additions:
+  Additions:
 
-	Changes:
-		Refactored docs_loop to be shorter
+  Changes:
+    Refactored docs_loop to be shorter
 
-	Fixes:
+  Fixes:
 	
-	Future:
+  Future:
 
 June 30, 2016, Version 0.11:
-	Additions:
-		Implemented sub-national location reporting ability
-			Stating location_reach is for intended beneficiaries
-			Stating locations coordinates are approximate
-			Stating geographic location class is administrative region
-		Added ability to report pending results
+  Additions:
+    Implemented sub-national location reporting ability
+      Stating location_reach is for intended beneficiaries
+      Stating locations coordinates are approximate
+      Stating geographic location class is administrative region
+    Added ability to report pending results
 
-	Changes:
-		Refactored the results_loop to match the format of a new results file.
+  Changes:
+    Refactored the results_loop to match the format of a new results file.
 
-	Fixes:
+  Fixes:
 
-	Future:
+  Future:
 
 June 20, 2016, Version 0.10:
-	Additions:
-		Implemented splitting of XML files into recipient countries and regions.
+  Additions:
+    Implemented splitting of XML files into recipient countries and regions.
 
-	Changes:
+  Changes:
 
-	Fixes:
+  Fixes:
 
-	Future:
+  Future:
 
 June 10, 2016, Version 0.9:
-	Additions:
-		Implentation of the ability to report results in hierarchy 2.
-			This will require a new results file to be input into the system.
-		Hierarchy 1 category descriptions are checked via a function method.
+  Additions:
+    Implentation of the ability to report results in hierarchy 2.
+      This will require a new results file to be input into the system.
+    Hierarchy 1 category descriptions are checked via a function method.
 
-	Changes:
+  Changes:
 
-	Fixes:
-		Added error checking for the Implementing Agent Type, in cases of field being blank.
+  Fixes:
+    Added error checking for the Implementing Agent Type, in cases of field being blank.
 
-	Future:
+  Future:
 
 May 26, 2016, Version 0.8:
-	Additions:
+  Additions:
 
-	Changes:
-		Changed how collaboration-type was input into the system
-			Now will produce a number, instead of transforming a string to a number
-		flow-type, finance-type, aid-type, and tied-status are now optional fields in the code
+  Changes:
+    Changed how collaboration-type was input into the system
+      Now will produce a number, instead of transforming a string to a number
+    flow-type, finance-type, aid-type, and tied-status are now optional fields in the code
 
-	Fixes:
-		usg:regular-account now uses the "Regular Account Code" field.
+  Fixes:
+    usg:regular-account now uses the "Regular Account Code" field.
 
-	Future:
+  Future:
 
 May 19, 2016, Version 0.7:
-	Additions:
+  Additions:
 		
-	Changes:
+  Changes:
 
-	Fixes:
-		Date placeholders now keep up with current year, instead of hardcoded 2015-2016 year
-		Fixed a typo in creation of Participating Org Role 1 indicator
+  Fixes:
+    Date placeholders now keep up with current year, instead of hardcoded 2015-2016 year
+    Fixed a typo in creation of Participating Org Role 1 indicator
 
-	Future:
-		Shorten the docs_loop function - Addressed in Version 0.12
+  Future:
+    Shorten the docs_loop function - Addressed in Version 0.12
 
 May 3, 2016, Version 0.6:
 
-	Additions:
-		Script will now produce recipient-country and recipient-region elements
-		Added ref attribute to Participating Org Role 4 elements
-		Added ability to differentiate between recipient-country and recipient-region
-		Added ability to create document-link element for activities
-		Added disbursement-channel element
-		Began providing DAC Sector Codes
-		Commented on more sections to make the code easier to read
+  Additions:
+    Script will now produce recipient-country and recipient-region elements
+    Added ref attribute to Participating Org Role 4 elements
+    Added ability to differentiate between recipient-country and recipient-region
+    Added ability to create document-link element for activities
+    Added disbursement-channel element
+    Began providing DAC Sector Codes
+    Commented on more sections to make the code easier to read
 
-	Changes:
-		Changed how titles are created:
-			US-1-[Name of Country/Region]-[Category]
-		Hierarchy "2" was changed to Hierarchy "3"
+  Changes:
+    Changed how titles are created:
+      US-1-[Name of Country/Region]-[Category]
+    Hierarchy "2" was changed to Hierarchy "3"
 
-	Fixes:
-		Moved Participating Org Roles 3 and 4 elements from Hierarchy 1 groups to Hierarchy 3 activities
-		Changed default tied status to  (Untied)
-			Previous entry for default was not a valid code
-		Now using appropriate field for budget
-			Was using "TEC1" field; now using "Total Allocations" field
-		Moved order of fields to correspond to IATI compliance
-		Now using sector categories to group activities
+  Fixes:
+    Moved Participating Org Roles 3 and 4 elements from Hierarchy 1 groups to Hierarchy 3 activities
+    Changed default tied status to  (Untied)
+      Previous entry for default was not a valid code
+    Now using appropriate field for budget
+      Was using "TEC1" field; now using "Total Allocations" field
+    Moved order of fields to correspond to IATI compliance
+    Now using sector categories to group activities
 
-	Future:
-		Shorten the docs_loop function - Addressed in Version 0.12
+  Future:
+    Shorten the docs_loop function - Addressed in Version 0.12
