@@ -10,8 +10,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "09-20-2017"
-__version__ = "0.29"
+__date__ = "08-22-2018"
+__version__ = "0.36"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -79,7 +79,6 @@ def group_split(ombfile):
         try:
             country = str(int(ombfile["DAC Regional Code"][i]))
         except ValueError:
-            print(str(ombfile["ISO Alpha Code"][i]))
             if str(ombfile["ISO Alpha Code"][i]) != 'nan':
                 try:
                     country = str(ombfile["ISO Alpha Code"][i])
@@ -94,6 +93,7 @@ def group_split(ombfile):
                         country = '998'
                 except ValueError:
                     country = '998'
+        print(country)
         if country not in actives:
             actives.append(country)
             ids.append([country, i])
@@ -119,7 +119,7 @@ def sectors_loop(recip, sects, cat):
             if str(sects[i])[:2] == cat[-2:]:  # This ensures only groups returned are current category.
                 if str(sects[i]) not in actives:
                     actives.append(str(sects[i]))
-                    sectors.append([sects[i],i])
+                    sectors.append([sects[i], i])
                 else:
                     for each in sectors:
                         if sects[i] == each[0]:
@@ -173,63 +173,77 @@ def trans_loop(idawarded, award):
     return transactions
 
 
-def historical_loop(hist_dict, cleanou, histfile):
+def historical_loop(hist_dict, cleanou, histcode, histfile):
     """
     Finds all transactions sharing the current activity's clean OU.
     :param hist_dict: The dictionary of activities with the proper clean OU.
     :param cleanou: The current clean OU to look for.
+    :param histcode: The region or country code to match with.
     :param histfile: The historical data file.
     :return transaction: Index numbers of the related transactions.
     """
-
+    # TODO: Map on the region/state codes that Darren will give me
+    # TODO: Add DAC Purpose Codes
     # Type, Value, Date
     hists = []
     temphist = []
 
     try:
         for i in range(0, len(hist_dict[cleanou])):
-            temphist.append(str(histfile["Award Transaction Type"][hist_dict[cleanou][i]]))
-            try:
-                histamount = histfile["Award Transaction Value"][hist_dict[cleanou][i]]
-                histvalue = '{0:.2f}'.format(histamount)
-            except ValueError:
-                histvalue = '0.00'
-            temphist.append(histvalue)
+            if histfile["DAC Regional Code"][hist_dict[cleanou][i]] == histcode or\
+                    histfile["ISO Alpha Code"][hist_dict[cleanou][i]] == histcode:
+                temphist.append(str(histfile["Award Transaction Type"][hist_dict[cleanou][i]]))
+                try:
+                    histamount = histfile["Award Transaction Value"][hist_dict[cleanou][i]]
+                    histvalue = '{0:.2f}'.format(histamount)
+                except ValueError:
+                    histvalue = '0.00'
+                temphist.append(histvalue)
 
-            try:
-                hist_date = str(int(histfile["Award Transaction Date"][hist_dict[cleanou][i]]))
-                formattedhistdate = hist_date[0:4] + '-' + hist_date[4:6] + '-' + hist_date[6:8]
-                temphist.append(formattedhistdate)
-            except ValueError:
-                temphist.append('')
+                try:
+                    hist_date = str(int(histfile["Award Transaction Date"][hist_dict[cleanou][i]]))
+                    formattedhistdate = hist_date[0:4] + '-' + hist_date[4:6] + '-' + hist_date[6:8]
+                    temphist.append(formattedhistdate)
+                except ValueError:
+                    temphist.append('')
 
-            hists.append(temphist)
-            temphist = []
-    except:
+                # DAC Sectors
+                try:
+                    dachistcode = str(int(histfile["DAC Purpose Code"][hist_dict[cleanou][i]]))
+                except ValueError:
+                    dachistcode = '0'
+                temphist.append(dachistcode)
+
+                hists.append(temphist)
+                temphist = []
+    except ValueError:
         return []
 
     return hists
 
 
-def dictfiles(locfile, docfile, histfile):
+def dictfiles(locfile, docfile, histfile, resfile):
     """
     Create dictionaries for faster access of the mapping files.
     :param locfile: the location file to use for mapping.
     :param docfile: the document file to use for mapping.
     :param histfile: the historical data file to use for mapping.
+    :param resfile: the results data file to use for mapping.
     :return loc_dict: the dict of locations
     :return doc_dict: the dict of documents
     :return hist_dict: the dict of historical data
+    :return res_dict: the dict of the results and objectives data
     """
     loc_dict = {}
     doc_dict = {}
     hist_dict = {}
+    res_dict = {}
 
     for i in range(0, len(locfile.index)):
-        if locfile["Clean ID"][i] in loc_dict:
-            loc_dict[locfile["Clean ID"][i]].append(i)
+        if locfile["clean_id"][i] in loc_dict:
+            loc_dict[locfile["clean_id"][i]].append(i)
         else:
-            loc_dict[locfile["Clean ID"][i]] = [i]
+            loc_dict[locfile["clean_id"][i]] = [i]
     for j in range(0, len(docfile.index)):
         if docfile["clean_id"][j] in doc_dict:
             doc_dict[docfile["clean_id"][j]].append(j)
@@ -240,35 +254,44 @@ def dictfiles(locfile, docfile, histfile):
             hist_dict[histfile["Implementing Mechanism ID"][h]].append(h)
         else:
             hist_dict[histfile["Implementing Mechanism ID"][h]] = [h]
+    for r in range(0, len(resfile.index)):
+        if resfile["Clean ID"][r] in res_dict:
+            res_dict[resfile["Clean ID"][r]].append(r)
+        else:
+            res_dict[resfile["Clean ID"][r]] = [r]
     print(loc_dict)
     print(doc_dict)
     print(hist_dict)
-    return loc_dict, doc_dict, hist_dict
+    print(res_dict)
+    return loc_dict, doc_dict, hist_dict, res_dict
 
 
-def location_loop(locfile, cleanid, loc_dict):
+def location_loop(locfile, cleanid, locmap, loc_dict):
     """
     Create a list of sub-national locations for an activity.
     :param locfile: the location file to use for mapping.
     :param cleanid: the clean id of the award to map to.
+    :param locmap: the ISO Alpha Code or DAC Regional Code of the award to map to.
     :param loc_dict: the dictionary holding the index to map to.
     :return locs: the list of locations to insert into the XML
     """
     locs = []
     temploc = []
     location_exact = "2"  # 1 is exact, 2 is approximate
-
     for i in range(0, len(loc_dict[cleanid])):
-        # TODO: Finish this if statement
-        if str(locfile["Clean OU Name"][loc_dict[cleanid][i]]) == loc_dict[cleanid][i]:
+        if str(locfile["iso_alpha_code"][loc_dict[cleanid][i]]) == locmap \
+                or str(locfile["dac_regional_code"][loc_dict[cleanid][i]]) == locmap:
+
             temploc.append(str(locfile["District"][loc_dict[cleanid][i]]))
             temploc.append(str(locfile["location_coordinates"][loc_dict[cleanid][i]]))
-            temploc.append(str(int(locfile["location_reach"][loc_dict[cleanid][i]])))
+            try:
+                temploc.append(str(int(locfile["location_reach"][loc_dict[cleanid][i]])))
+            except ValueError:
+                temploc.append('2')
             temploc.append(location_exact)
             temploc.append(str(int(locfile["location_type"][loc_dict[cleanid][i]])))
             locs.append(temploc)
             temploc = []
-
     return locs
 
 
@@ -285,8 +308,8 @@ def docs_loop(docfile, cleanid, doc_dict):
     tempdoc = []
 
     for i in range(0, len(doc_dict[cleanid])):
-        tempdoc.append(str(docfile["Title"][doc_dict[cleanid][i]]))
-        tempdoc.append(str(docfile["File"][doc_dict[cleanid][i]]))
+        tempdoc.append(str(docfile["Activity Title"][doc_dict[cleanid][i]]))
+        tempdoc.append(str(docfile["file"][doc_dict[cleanid][i]]))
         tempdoc.append(str(docfile["doc_format"][doc_dict[cleanid][i]]))
         tempdoc.append(str(docfile["doc_category"][doc_dict[cleanid][i]]))
         tempdoc.append(str(docfile["Lang_code"][doc_dict[cleanid][i]]))
@@ -304,6 +327,33 @@ def docs_loop(docfile, cleanid, doc_dict):
     return docs
 
 
+def results_loop(resfile, cleanid, res_dict):
+    """
+    Create a list of documents for an activity.
+    :param resfile: the results file to use for mapping.
+    :param cleanid: the clean id of the award to map to.
+    :param res_dict: the dictionary holding the index to map to.
+    :return results: the list of results and objectives to insert into the XML
+    """
+    # Title, URL, Format, Category, Language
+    resu = []
+    tempres = []
+    obje = []
+    tempobj = []
+
+    for i in range(0, len(res_dict[cleanid])):
+        tempres.append(str(resfile["results"][res_dict[cleanid][i]]))
+        tempres.append(str(resfile["results_title"][res_dict[cleanid][i]]))
+        tempres.append(str(resfile["results_indicator"][res_dict[cleanid][i]]))
+        tempobj.append(str(resfile["objectives"][res_dict[cleanid][i]]))
+
+        res.append(tempres)
+        tempres = []
+        obje.append(tempobj)
+        tempobj = []
+    return resu, obje
+
+
 def lang_loop(transelement, langs, translations):
     """
     Create narratives for each language translation available.
@@ -315,13 +365,13 @@ def lang_loop(transelement, langs, translations):
     it = 0
     for i in langs:
         if i is 'en':
-            narrative = SubElement(transelement, 'narrative')
+            langnarrative = SubElement(transelement, 'narrative')
         else:
-            narrative = SubElement(transelement, 'narrative', xml__lang=i)
+            langnarrative = SubElement(transelement, 'narrative', xml__lang=i)
         if translations[it] != 'nan':
-            narrative.text = translations[it]
+            langnarrative.text = translations[it]
         else:
-            narrative.text = 'There is no available description.'
+            langnarrative.text = 'There is no available description.'
         it += 1
 
 
@@ -331,7 +381,10 @@ def orgnumber(org):
     :param org: The organization to pull the code for
     :return: The organization's IATI code
     """
-    if org == 'Department of Agriculture' or org == 'US Department of Agriculture' or org == 'Dept of Agriculture':
+    if org == 'U.S. Government - U.S. Agency for International Development' \
+            or org == 'U.S. Agency for International Development':
+        orgcode = 'US-GOV-1'
+    elif org == 'Department of Agriculture' or org == 'US Department of Agriculture' or org == 'Dept of Agriculture':
         orgcode = 'US-GOV-2'
     elif org == 'US Department of Treasury':
         orgcode = 'US-GOV-6'
@@ -342,7 +395,7 @@ def orgnumber(org):
     elif org == 'Exec Office of the President':
         orgcode = 'US-GOV-30'
     else:
-        orgcode = 'US-GOV-1'
+        orgcode = ''
     return orgcode
 
 
@@ -408,72 +461,88 @@ def open_files():
     :return loc_file: The location file with the sub-national location mapping data
     :return doc_file: The documents file with the document mapping data
     :return hist_file: The historical data file with historical mapping data
+    :return res_file: The results and objectives data file with mapping data
     """
     # Prompt user for filename
-    filetoopen = input("What is the name of the omb source file? ")
-    # filetoopen = 'FY17Q3/Worldwide4.xlsx'
+    # filetoopen = input("What is the name of the omb source file? ")
+    filetoopen = 'FY18Q3 BD/final_new_trans_iati_data.xlsx'
     # filetoopen = sys.argv[1]
     print('Opening OMB file...')
     # Read the file
     try:
-        omb = pandas.read_excel(filetoopen, encoding='utf-8')
-    except:
+        ombf = pandas.read_excel(filetoopen, encoding='utf-8')
+    except FileNotFoundError:
         sys.exit("OMB file does not exist.")
     # Output the number of rows
-    print('Total rows: {0}'.format(len(omb)))
+    print('Total rows: {0}'.format(len(ombf)))
     # See which headers are available
-    print(list(omb))
+    print(list(ombf))
 
-    loctoopen = input("What is the name of the location mapping file? ")
-    # loctoopen = 'FY17Q3/Subnat mapping.xlsx'
+    # loctoopen = input("What is the name of the location mapping file? ")
+    loctoopen = 'FY18Q3 BD/Subnat mapping.xlsx'
     print('Opening location file...')
     # Read the file
     try:
-        loc_file = pandas.read_excel(loctoopen, encoding='utf-8')
-    except:
+        locs_file = pandas.read_excel(loctoopen, encoding='utf-8')
+    except FileNotFoundError:
         sys.exit("Location file does not exist.")
     # Output the number of rows
-    print('Total rows: {0}'.format(len(loc_file)))
+    print('Total rows: {0}'.format(len(locs_file)))
     # See which headers are available
-    print(list(loc_file))
+    print(list(locs_file))
 
-    doctoopen = input("What is the name of the document mapping file? ")
-    # doctoopen = 'FY17Q3/DEC mapping.xlsx'
+    # doctoopen = input("What is the name of the document mapping file? ")
+    doctoopen = 'FY18Q3 BD/DEC mapping.xlsx'
     print('Opening document file...')
     # Read the file
     try:
-        doc_file = pandas.read_excel(doctoopen, encoding='utf-8')
-    except:
+        docs_file = pandas.read_excel(doctoopen, encoding='utf-8')
+    except FileNotFoundError:
         sys.exit("Document file does not exist.")
     # Output the number of rows
-    print('Total rows: {0}'.format(len(doc_file)))
+    print('Total rows: {0}'.format(len(docs_file)))
     # See which headers are available
-    print(list(doc_file))
+    print(list(docs_file))
 
-    histtoopen = input("What is the name of the historical data file? ")
-    # histtoopen = 'FY17Q3/historical_transactions.xlsx'
+    # histtoopen = input("What is the name of the historical data file? ")
+    histtoopen = 'FY18Q3 BD/historical_transactions.xlsx'
     print('Opening historical data file...')
     # Read the file
     try:
-        hist_file = pandas.read_excel(histtoopen, encoding='utf-8')
-    except:
+        hists_file = pandas.read_excel(histtoopen, encoding='utf-8')
+    except FileNotFoundError:
         sys.exit("Historical file does not exist.")
     # Output the number of rows
-    print('Total rows: {0}'.format(len(hist_file)))
+    print('Total rows: {0}'.format(len(hists_file)))
     # See which headers are available
-    print(list(hist_file))
+    print(list(hists_file))
 
-    return omb, loc_file, doc_file, hist_file
+    # restoopen = input("What is the name of the results data file? ")
+    restoopen = 'FY18Q3 BD/Obj Results mapping.xlsx'
+    print('Opening results data file...')
+    # Read the file
+    try:
+        resu_file = pandas.read_excel(restoopen, encoding='utf-8')
+    except FileNotFoundError:
+        sys.exit("Results file does not exist.")
+    # Output the number of rows
+    print('Total rows: {0}'.format(len(resu_file)))
+    # See which headers are available
+    print(list(resu_file))
+
+    return ombf, locs_file, docs_file, hists_file, resu_file
+
 
 curtime = time.time()
-omb, loc_file, doc_file, hist_file = open_files()
+omb, loc_file, doc_file, hist_file, res_file = open_files()
 opentime = time.time() - curtime
 print('Converting format...')
+now = datetime.datetime.utcnow().strftime('%Y-%m-%d')
 
 # Variable creation
 idlist, idawards, isolist = id_loop(omb)
-locdict, docdict, histdict = dictfiles(loc_file, doc_file, hist_file)
-print(idawards)
+locdict, docdict, histdict, resdict = dictfiles(loc_file, doc_file, hist_file, res_file)
+# print(idawards)
 # This will turn on full dataset dump into one XML. Untab all code after this.
 # ombActs = activities_loop(idlist)
 
@@ -485,7 +554,7 @@ for ombActs in ombgrouping:
 
     filesleft = len(ombActs)
 
-    ver = '2.02'
+    ver = '2.03'
     fasite = 'https://explorer.usaid.gov/'
 
     activities = Element('iati-activities', version=ver,
@@ -538,7 +607,7 @@ for ombActs in ombgrouping:
                     title = 'US-Worldwide-' + partOrgText2
                 titleText.append(title)
                 titleText.append('')
-                descText.append(str(omb["IATI Narrative - Level 3"][act]))
+                descText.append(str(omb["Implementing Mechanism Purpose Statement"][act]))
                 descText.append('')
 
                 relatedList = related_loop(idlist, idawards, ident)
@@ -546,9 +615,6 @@ for ombActs in ombgrouping:
                 for rel in relatedList:
                     relType = '2'
                     relRef = idawards[rel]
-
-                # if resultsopen != '':
-                #    results_loop(results, ident, activities)
 
                 # Begin creating the activities
                 for relact in relatedList:
@@ -569,7 +635,7 @@ for ombActs in ombgrouping:
                     descText = list()
                     titleText.append(str(omb["Implementing Mechanism Title"][relact]))
                     titleText.append('')
-                    descText.append(str(omb["IATI Narrative - Level 3"][relact]))
+                    descText.append(str(omb["Implementing Mechanism Purpose Statement"][relact]))
                     descText.append('')
                     partOrgText = str(omb["Appropriated Agency"][relact])
                     partOrgRef = orgnumber(partOrgText)
@@ -586,7 +652,11 @@ for ombActs in ombgrouping:
                     partOrgType3 = '10'
                     partOrgRole4 = '4'
                     partOrgText4 = str(omb["Implementing Agent"][relact])
-                    partOrgRef4 = orgnumber(partOrgText4)
+                    if str(omb["IATI Organization ID"][relact]) == 'nan':
+                        partOrgRef4 = orgnumber(partOrgText4)
+                    else:
+                        partOrgRef4 = str(omb["IATI Organization ID"][relact])
+
                     try:
                         partOrgType4 = str(int(omb["Implementing Agent Type"][relact]))
                     except ValueError:
@@ -631,7 +701,8 @@ for ombActs in ombgrouping:
                                           last_h_updated_h_datetime=lastUpdate,
                                           xml__lang=langList[0], default_h_currency=cur)
                     identifier = SubElement(activity, 'iati-identifier')
-                    identifier.text = identity
+                    repId = repOrgRef + '-' + award_id
+                    identifier.text = repId
                     reporting_org = SubElement(activity, 'reporting-org', ref=repOrgRef,
                                                type=repOrgType)
                     narrative = SubElement(reporting_org, 'narrative')
@@ -640,6 +711,20 @@ for ombActs in ombgrouping:
                     lang_loop(title, langList, titleText)
                     description = SubElement(activity, 'description')
                     lang_loop(description, langList, descText)
+
+                    # Populate the results and objectives
+                    resList = []
+                    objList = []
+                    if clean_id != 'nan':
+                        if clean_id in resdict:
+                            resList, objList = results_loop(res_file, clean_id, resdict)
+
+                        for obj in objList:
+                            if obj[0] != 'nan' and obj[0] != '':
+                                transObjective = SubElement(activity, 'description', type='2')
+                                narrative = SubElement(transObjective, 'narrative')
+                                narrative.text = obj[0]
+
                     participating_org1 = SubElement(activity, 'participating-org',
                                                     ref=partOrgRef, role=partOrgRole, type=partOrgType1)
                     narrative = SubElement(participating_org1, 'narrative')
@@ -680,23 +765,29 @@ for ombActs in ombgrouping:
                     # activity_planstart = SubElement(activity, 'activity-date',
                     #                            iso_h_date=isodatetimeformatstart,
                     #                            type=activityDateTypePlanStart)
-                    activity_startdate = SubElement(activity, 'activity-date',
-                                                    iso_h_date=isodatetimeformatstart,
-                                                    type=activityDateTypeStart)
+                    activity_planstartdate = SubElement(activity, 'activity-date',
+                                                        iso_h_date=isodatetimeformatstart,
+                                                        type=activityDateTypePlanStart)
+
+                    if isodatetimeformatstart <= now:
+                        activity_startdate = SubElement(activity, 'activity-date',
+                                                        iso_h_date=isodatetimeformatstart, type=activityDateTypeStart)
                     if activityStartDateText:
-                        narrative = SubElement(activity_startdate, 'narrative')
+                        narrative = SubElement(activity_planstartdate, 'narrative')
                         narrative.text = activityStartDateText
 
                     # All dates are always "actual". There are no "planned" dates.
                     # activity_planend = SubElement(activity, 'activity-date',
                     #                               iso_h_date=isodatetimeformatend,
                     #                               type=activityDateTypePlanEnd)
-                    activity_enddate = SubElement(activity, 'activity-date',
-                                                  iso_h_date=isodatetimeformatend,
-                                                  type=activityDateTypeEnd)
+                    activity_planenddate = SubElement(activity, 'activity-date',
+                                                      iso_h_date=isodatetimeformatend, type=activityDateTypePlanEnd)
+                    if isodatetimeformatend <= now:
+                        activity_enddate = SubElement(activity, 'activity-date',
+                                                      iso_h_date=isodatetimeformatend, type=activityDateTypeEnd)
                     if activityEndDateText:
-                        narrative = SubElement(activity_enddate, 'narrative')
-                        narrative.text = activityStartDateText
+                        narrative = SubElement(activity_planenddate, 'narrative')
+                        narrative.text = activityEndDateText
 
                     # Contact information block variables
                     contactType = '1'
@@ -751,7 +842,7 @@ for ombActs in ombgrouping:
                     # Populate the subnational locations
                     if clean_id != 'nan':
                         if clean_id in locdict:
-                            locsList = location_loop(loc_file, clean_id, locdict)
+                            locsList = location_loop(loc_file, clean_id, countryinit, locdict)
                         else:
                             locsList = []
                         gis = "http://www.opengis.net/def/crs/EPSG/0/4326"
@@ -793,20 +884,20 @@ for ombActs in ombgrouping:
                     except ValueError:
                         tiedCode = '0'
                     # This is for error checking
+                    periodStartDate = ''
                     try:
                         if str(int(omb["Start Date"][relact])) != 'nan':
                             periodStart = \
                                 str(int(omb["Start Date"][relact]))
-                            periodStartDate = periodStart[0:4] + '-' + periodStart[4:6] + '-' + \
-                                              periodStart[6:8]
+                            periodStartDate = periodStart[0:4] + '-' + periodStart[4:6] + '-' + periodStart[6:8]
                     except ValueError:
                         periodStartDate = str(int(omb["Beginning Fiscal Funding Year"][relact])) + '-10-01'
+                    periodEndDate = ''
                     try:
                         if str(int(omb["End Date"][relact])) != 'nan':
                             periodEnd = \
                                 str(int(omb["End Date"][relact]))
-                            periodEndDate = periodEnd[0:4] + '-' + periodEnd[4:6] + '-' + \
-                                            periodEnd[6:8]
+                            periodEndDate = periodEnd[0:4] + '-' + periodEnd[4:6] + '-' + periodEnd[6:8]
                     except ValueError:
                         try:
                             if str(int(omb["Ending Fiscal Funding Year"][relact])) != 'nan':
@@ -850,7 +941,7 @@ for ombActs in ombgrouping:
 
                     # Create the list of transactions for a specific activity
                     # histList = trans_loop(histdict, idawards[relact])
-                    histList = historical_loop(histdict, award_id, hist_file)
+                    histList = historical_loop(histdict, award_id, countryinit, hist_file)
                     transList = trans_loop(idawards, idawards[relact])
 
                     # These two make it easier to determine
@@ -862,6 +953,7 @@ for ombActs in ombgrouping:
                     # Loop through the historical transactions
                     for trans in histList:
 
+                        transaction = ''
                         valueAmount = trans[1]
                         transType = trans[0]
                         if transType == "Commitment" or transType == "Obligation":
@@ -885,6 +977,10 @@ for ombActs in ombgrouping:
                                                    value_h_date=value_datetime)
                                 value.text = valueAmount
 
+                            if str(int(trans[3])) != '0':
+                                sector = SubElement(transaction, 'sector',
+                                                    code=str(int(trans[3])), vocabulary='1')
+
                         # Make sure there is exactly 1 transaction value of 0.00 for Disb if needed
                         if transaction_code == '3':
                             if (disMarker is True and valueAmount != 0) or (
@@ -898,6 +994,11 @@ for ombActs in ombgrouping:
                                 value = SubElement(transaction, 'value',
                                                    value_h_date=value_datetime)
                                 value.text = valueAmount
+
+                            # DAC Sectors
+                            if str(int(trans[3])) != '0':
+                                sector = SubElement(transaction, 'sector',
+                                                    code=str(int(trans[3])), vocabulary='1')
 
                     # Loop through the transactions related to the activity
                     for trans in transList:
@@ -938,10 +1039,11 @@ for ombActs in ombgrouping:
                         except ValueError:
                             fundingYearEnd = str(datetime.datetime.utcnow().strftime('%Y'))
 
-                        actObj = str(omb["Activity Objective"][trans])
+                        transaction = ''
                         # Make sure there is exactly 1 transaction value of 0.00 for Com if needed
                         if transaction_code == '2':
-                            if (comMarker is True and valueAmount != '0.00') or (comMarker is False and valueAmount == '0.00'):
+                            if (comMarker is True and valueAmount != '0.00') or\
+                                    (comMarker is False and valueAmount == '0.00'):
                                 # Set the elements
                                 try:
                                     if str(int(omb["Humanitarian Tag"][trans])) == '1':
@@ -959,10 +1061,6 @@ for ombActs in ombgrouping:
                                 value.text = valueAmount
                                 transDescription = SubElement(transaction, 'description')
                                 lang_loop(transDescription, langList, transDescList)
-                                if actObj != 'nan' and actObj != '':
-                                    transObjective = SubElement(transaction, 'description', type='2')
-                                    narrative = SubElement(transObjective, 'narrative')
-                                    narrative.text = str(omb["Activity Objective"][trans])
 
                                 try:
                                     disbChan = str(int(omb["Disbursement Channel"][trans]))
@@ -994,6 +1092,15 @@ for ombActs in ombgrouping:
                                                     code=sectorCode, vocabulary=sectorVocab)
                                 narrative = SubElement(sector, 'narrative')
                                 narrative.text = sectorText
+
+                                try:
+                                    if str(int(omb["Humanitarian Tag"][trans])) == '1':
+                                        cluster = str(int(omb["Cluster ID"][trans]))
+                                        if cluster != 'nan':
+                                            clusterSector = SubElement(transaction, 'sector',
+                                                                       code=cluster, vocabulary='10')
+                                except ValueError:
+                                    cluster = '0'
 
                                 treasury_account = \
                                     SubElement(transaction, 'usg__treasury-account')
@@ -1029,10 +1136,12 @@ for ombActs in ombgrouping:
                                 value.text = valueAmount
                                 transDescription = SubElement(transaction, 'description')
                                 lang_loop(transDescription, langList, transDescList)
-                                if actObj != 'nan' and actObj != '':
-                                    transObjective = SubElement(transaction, 'description', type='2')
-                                    narrative = SubElement(transObjective, 'narrative')
-                                    narrative.text = str(omb["Activity Objective"][trans])
+
+                                # TODO: Adjust objective description so that only one shows up in an activity
+                                # if actObj != 'nan' and actObj != '':
+                                #    transObjective = SubElement(transaction, 'description', type='2')
+                                #    narrative = SubElement(transObjective, 'narrative')
+                                #    narrative.text = str(omb["Activity Objective"][trans])
 
                                 try:
                                     disbChan = str(int(omb["Disbursement Channel"][trans]))
@@ -1052,6 +1161,15 @@ for ombActs in ombgrouping:
                                 dacText = str(omb["DAC Purpose Name"][trans])
                                 sectorVocab = '99'
                                 sectorText = str(omb["U.S. Government Sector Name"][trans])
+
+                                try:
+                                    if str(int(omb["Humanitarian Tag"][trans])) == '1':
+                                        cluster = str(int(omb["Cluster ID"][trans]))
+                                        if cluster != 'nan':
+                                            clusterSector = SubElement(transaction, 'sector',
+                                                                       code=cluster, vocabulary='10')
+                                except ValueError:
+                                    cluster = '0'
 
                                 # Create the element tree
                                 disburseChannel = SubElement(transaction, 'disbursement-channel', code=disbChan)
@@ -1095,23 +1213,23 @@ for ombActs in ombgrouping:
                             lang = SubElement(document, 'language', code=doc[4])
                             if doc[5] != '':
                                 docdate = SubElement(document, 'document-date', iso_h_date=doc[5])
-                    conditionsDocument = str(omb["Conditions Document Link"][relact])
-                    if conditionsDocument != 'nan':
-                        if conditionsDocument == "https://www.usaid.gov/sites/default/files/documents/1868/302.pdf":
-                            conditionsDocumentTitle = "ADS Chapter 302 USAID Direct Contracting"
-                        elif conditionsDocument == "https://www.usaid.gov/sites/default/files/documents/1868/303.pdf":
-                            conditionsDocumentTitle = \
-                                "ADS Chapter 303 Grants and Cooperative Agreements to Non-Governmental Organizations"
-                        conditionsAttached = "1"
-                        document = SubElement(activity, 'document-link', format="application/pdf",
-                                              url=conditionsDocument)
-                        title = SubElement(document, 'title')
-                        narrative = SubElement(title, 'narrative')
-                        narrative.text = conditionsDocumentTitle
-                        category = SubElement(document, 'category', code="A04")
-                        lang = SubElement(document, 'language', code="en")
-                    else:
-                        conditionsAttached = "0"
+                    # conditionsDocument = str(omb["Conditions Document Link"][relact])
+                    # if conditionsDocument != 'nan':
+                    #     if conditionsDocument == "https://www.usaid.gov/sites/default/files/documents/1868/302.pdf":
+                    #         conditionsDocumentTitle = "ADS Chapter 302 USAID Direct Contracting"
+                    #     elif conditionsDocument == "https://www.usaid.gov/sites/default/files/documents/1868/303.pdf":
+                    #         conditionsDocumentTitle = \
+                    #             "ADS Chapter 303 Grants and Cooperative Agreements to Non-Governmental Organizations"
+                    #     conditionsAttached = "1"
+                    #     document = SubElement(activity, 'document-link', format="application/pdf",
+                    #                           url=conditionsDocument)
+                    #     title = SubElement(document, 'title')
+                    #     narrative = SubElement(title, 'narrative')
+                    #     narrative.text = conditionsDocumentTitle
+                    #     category = SubElement(document, 'category', code="A04")
+                    #     lang = SubElement(document, 'language', code="en")
+                    # else:
+                    conditionsAttached = "0"
 
                     # TODO: Insert code for Contract Links here
                     # document-link code=A11
@@ -1122,14 +1240,27 @@ for ombActs in ombgrouping:
                     #  subelement(contract, 'category', code="A11")
                     #  subelement(contract, 'language', code="en")
 
-                    relType = '1'
-                    relRef = ident
-                    SubElement(activity, 'related-activity', type=relType, ref=relRef)
                     # This assumes that there will never be any conditions.
                     # This is currently the case, however, this may eventually change.
                     conditions = SubElement(activity, 'conditions', attached=conditionsAttached)
                     SubElement(activity, 'usg__mechanism-signing-date',
                                iso_h_date=signdateformat)
+
+                    for res in resList:
+                        if res[1] != 'nan':
+                            resulting = SubElement(activity, 'result', type='9')
+                            resulttitle = SubElement(resulting, 'title')
+                            narrative = SubElement(resulttitle, 'narrative')
+                            narrative.text = res[1]
+                            if res[0] != 'nan':
+                                resultdescription = SubElement(resulting, 'description')
+                                narrative = SubElement(resultdescription, 'narrative')
+                                narrative.text = res[0]
+                            if res[2] != 'nan':
+                                resultindicator = SubElement(resulting, 'indicator', measure='5')
+                                indicatortitle = SubElement(resultindicator, 'title')
+                                narrative = SubElement(indicatortitle, 'narrative')
+                                narrative.text = res[2]
 
                     # Extra fields requested by State
                     try:
@@ -1143,15 +1274,15 @@ for ombActs in ombgrouping:
                     elif stateloc == "Lao Peopleâ€™s Democratic Republic":
                         stateloc = "Lao People's Democratic Republic"
 
-                    if (duns != 'nan'):
+                    if duns != 'nan':
                         dunselement = SubElement(activity, 'usg__duns-number')
                         narrative = SubElement(dunselement, 'narrative')
                         narrative.text = duns
-                    if (tec != 'nan'):
+                    if tec != 'nan':
                         tecelement = SubElement(activity, 'usg__tec1')
                         narrative = SubElement(tecelement, 'narrative')
                         narrative.text = tec
-                    if (stateloc != 'nan'):
+                    if stateloc != 'nan':
                         stateelement = SubElement(activity, 'usg__state-location')
                         narrative = SubElement(stateelement, 'narrative')
                         narrative.text = stateloc
@@ -1169,9 +1300,13 @@ for ombActs in ombgrouping:
         os.makedirs('export/' + time.strftime("%m-%d-%Y") + '/')
     # This line is for country names
     # TODO: int(ombActs[1]) <-> int(act)
-    output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-'+str(omb["State Location"][int(ombActs[1])])+'.xml', 'w', encoding='utf-8')
+    # output_file = open('export/' + time.strftime("%m-%d-%Y") +
+    # '/iati-activities-Worldwide 4.xml', 'w', encoding='utf-8')
+    output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-' +
+                       str(omb["Country File Name"][int(ombActs[1])])+'.xml', 'w', encoding='utf-8')
     # This line is for country codes
-    # output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-'+ombActs[0]+'.xml', 'w', encoding='utf-8')
+    # output_file = open('export/' + time.strftime("%m-%d-%Y") +
+    # '/iati-activities-'+ombActs[0]+'.xml', 'w', encoding='utf-8')
     output_file.write(prettify(activities).replace("__", ":").replace("_h_", "-"))
     output_file.close()
     finaltime = time.time() - curtime
@@ -1181,7 +1316,7 @@ for ombActs in ombgrouping:
     print('Run time: ' + str(finaltime))
     print('Average time per main activity: ' +
           str((converttime - opentime)/len(ombActs)))
-    print('Files left: ' + str(len(ombActs)))
+    # print('Files left: ' + str(len(ombActs)))
 print('Zipping...')
-shutil.make_archive('export-' + time.strftime("%m-%d-%Y"), 'zip', 'export/' + time.strftime("%m-%d-%Y") + '/')
+shutil.make_archive('export/zip/export-'+time.strftime("%m-%d-%Y"), 'zip', 'export/' + time.strftime("%m-%d-%Y") + '/')
 print('Complete!')
