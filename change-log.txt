@@ -1,5 +1,8 @@
 Change Log for IATI XML Production Script
 
+September 7, 2018, Version 0.36:
+  Lost track of keeping change-log updates. Sorry!
+
 September 20, 2017, Version 0.29:
   Additions:
     New functions for historical data
