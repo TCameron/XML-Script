@@ -10,8 +10,8 @@ import pandas
 
 __author__ = "Timothy Cameron"
 __email__ = "tcameron@devtechsys.com"
-__date__ = "08-22-2018"
-__version__ = "0.36"
+__date__ = "09-20-2018"
+__version__ = "0.38"
 date = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]+'Z'
 
 
@@ -93,7 +93,6 @@ def group_split(ombfile):
                         country = '998'
                 except ValueError:
                     country = '998'
-        print(country)
         if country not in actives:
             actives.append(country)
             ids.append([country, i])
@@ -102,29 +101,6 @@ def group_split(ombfile):
                 if country == each[0]:
                     each.append(i)
     return ids
-
-
-def sectors_loop(recip, sects, cat):
-    """
-    Find which activities are the main ones to set as hierarchy 1.
-    :param recip: The recipient country or region code.
-    :param sects: The sector code in the results file.
-    :param cat: The sector category code to ensure that the sectors are within.
-    :return sectors: The index numbers corresponding to the rows of the appropriate sectors.
-    """
-    sectors = list()
-    actives = list()
-    for i in range(0, len(sects)):
-        if "US-GOV-1-" + str(recip[i]) + "-" + str(sects[i])[:2] == cat:
-            if str(sects[i])[:2] == cat[-2:]:  # This ensures only groups returned are current category.
-                if str(sects[i]) not in actives:
-                    actives.append(str(sects[i]))
-                    sectors.append([sects[i], i])
-                else:
-                    for each in sectors:
-                        if sects[i] == each[0]:
-                            each.append(i)
-    return sectors
 
 
 def activities_loop(allids):
@@ -173,6 +149,20 @@ def trans_loop(idawarded, award):
     return transactions
 
 
+def cluster_loop(clustercodes, transelement):
+    """
+    Creates SubElements for each appropriate cluster code attached to a transaction.
+    :param clustercodes: The list of cluster codes attached to the transaction.
+    :param transelement: The SubElement to add on to.
+    :return: N/A
+    """
+    # TODO: Insert the appropriate vocab uri.
+    vocaburi = ""
+    clusterlist = clustercodes.split(';')
+    for code in clusterlist:
+        SubElement(transelement, 'sector', code=code, vocabulary="10", vocabulary_h_uri=vocaburi)
+
+
 def historical_loop(hist_dict, cleanou, histcode, histfile):
     """
     Finds all transactions sharing the current activity's clean OU.
@@ -182,9 +172,6 @@ def historical_loop(hist_dict, cleanou, histcode, histfile):
     :param histfile: The historical data file.
     :return transaction: Index numbers of the related transactions.
     """
-    # TODO: Map on the region/state codes that Darren will give me
-    # TODO: Add DAC Purpose Codes
-    # Type, Value, Date
     hists = []
     temphist = []
 
@@ -194,8 +181,8 @@ def historical_loop(hist_dict, cleanou, histcode, histfile):
                     histfile["ISO Alpha Code"][hist_dict[cleanou][i]] == histcode:
                 temphist.append(str(histfile["Award Transaction Type"][hist_dict[cleanou][i]]))
                 try:
-                    histamount = histfile["Award Transaction Value"][hist_dict[cleanou][i]]
-                    histvalue = '{0:.2f}'.format(histamount)
+                    histamount = float(histfile["Award Transaction Value"][hist_dict[cleanou][i]])
+                    histvalue = str('{0:.2f}'.format(histamount))
                 except ValueError:
                     histvalue = '0.00'
                 temphist.append(histvalue)
@@ -216,7 +203,7 @@ def historical_loop(hist_dict, cleanou, histcode, histfile):
 
                 hists.append(temphist)
                 temphist = []
-    except ValueError:
+    except KeyError:
         return []
 
     return hists
@@ -347,7 +334,7 @@ def results_loop(resfile, cleanid, res_dict):
         tempres.append(str(resfile["results_indicator"][res_dict[cleanid][i]]))
         tempobj.append(str(resfile["objectives"][res_dict[cleanid][i]]))
 
-        res.append(tempres)
+        resu.append(tempres)
         tempres = []
         obje.append(tempobj)
         tempobj = []
@@ -465,8 +452,7 @@ def open_files():
     """
     # Prompt user for filename
     # filetoopen = input("What is the name of the omb source file? ")
-    filetoopen = 'FY18Q3 BD/final_new_trans_iati_data.xlsx'
-    # filetoopen = sys.argv[1]
+    filetoopen = 'FY18Q3/worldwide2.xlsx'
     print('Opening OMB file...')
     # Read the file
     try:
@@ -479,7 +465,7 @@ def open_files():
     print(list(ombf))
 
     # loctoopen = input("What is the name of the location mapping file? ")
-    loctoopen = 'FY18Q3 BD/Subnat mapping.xlsx'
+    loctoopen = 'FY18Q3/Subnat mapping.xlsx'
     print('Opening location file...')
     # Read the file
     try:
@@ -492,7 +478,7 @@ def open_files():
     print(list(locs_file))
 
     # doctoopen = input("What is the name of the document mapping file? ")
-    doctoopen = 'FY18Q3 BD/DEC mapping.xlsx'
+    doctoopen = 'FY18Q3/DEC mapping.xlsx'
     print('Opening document file...')
     # Read the file
     try:
@@ -505,7 +491,7 @@ def open_files():
     print(list(docs_file))
 
     # histtoopen = input("What is the name of the historical data file? ")
-    histtoopen = 'FY18Q3 BD/historical_transactions.xlsx'
+    histtoopen = 'FY18Q3/historical_transactions.xlsx'
     print('Opening historical data file...')
     # Read the file
     try:
@@ -518,7 +504,7 @@ def open_files():
     print(list(hists_file))
 
     # restoopen = input("What is the name of the results data file? ")
-    restoopen = 'FY18Q3 BD/Obj Results mapping.xlsx'
+    restoopen = 'FY18Q3/Obj Results mapping.xlsx'
     print('Opening results data file...')
     # Read the file
     try:
@@ -542,7 +528,6 @@ now = datetime.datetime.utcnow().strftime('%Y-%m-%d')
 # Variable creation
 idlist, idawards, isolist = id_loop(omb)
 locdict, docdict, histdict, resdict = dictfiles(loc_file, doc_file, hist_file, res_file)
-# print(idawards)
 # This will turn on full dataset dump into one XML. Untab all code after this.
 # ombActs = activities_loop(idlist)
 
@@ -906,9 +891,9 @@ for ombActs in ombgrouping:
                             periodEndDate = ''
                     budgetValueDate = periodStartDate
                     try:
-                        if str(int(omb["Total allocations"][relact])) != 'nan':
-                            budgetAmount = '{0:.2f}'.format(omb["Total allocations"][relact])
-                        else:
+                        totalallocationsfloat = float(omb["Total allocations"][relact])
+                        budgetAmount = str('{0:.2f}'.format(omb["Total allocations"][relact]))
+                        if budgetAmount == 'nan':
                             budgetAmount = '0.00'
                     except ValueError:
                         budgetAmount = '0.00'
@@ -980,6 +965,16 @@ for ombActs in ombgrouping:
                             if str(int(trans[3])) != '0':
                                 sector = SubElement(transaction, 'sector',
                                                     code=str(int(trans[3])), vocabulary='1')
+                            # Cluster Codes
+                            # TODO: adjust the cluster code column name
+                            try:
+                                clusters = ""
+                                # clusters = str(omb["cluster_codes"][trans])
+                            except ValueError:
+                                clusters = ""
+
+                            if clusters != "" and clusters != "nan":
+                                cluster_loop(clusters, transaction)
 
                         # Make sure there is exactly 1 transaction value of 0.00 for Disb if needed
                         if transaction_code == '3':
@@ -999,14 +994,24 @@ for ombActs in ombgrouping:
                             if str(int(trans[3])) != '0':
                                 sector = SubElement(transaction, 'sector',
                                                     code=str(int(trans[3])), vocabulary='1')
+                            # Cluster Codes
+                            # TODO: adjust the cluster code column name
+                            try:
+                                clusters = ""
+                                # clusters = str(omb["cluster_codes"][trans])
+                            except ValueError:
+                                clusters = ""
+
+                            if clusters != "" and clusters != "nan":
+                                cluster_loop(clusters, transaction)
 
                     # Loop through the transactions related to the activity
                     for trans in transList:
                         # Variables that depend on entries
                         # If the disbursement has a value, set value to disbursement.
                         try:
-                            transAmount = omb["Award Transaction Value"][trans]
-                            valueAmount = '{0:.2f}'.format(transAmount)
+                            transAmount = float(omb["Award Transaction Value"][trans])
+                            valueAmount = str('{0:.2f}'.format(transAmount))
                         except ValueError:
                             valueAmount = '0.00'
                         transDescList = list()
@@ -1267,7 +1272,7 @@ for ombActs in ombgrouping:
                         duns = str(int(omb["Implementing Agent's DUNS Number"][relact]))
                     except ValueError:
                         duns = 'nan'
-                    tec = '{0:.2f}'.format(omb["TEC"][relact])
+                    tec = str('{0:.2f}'.format(float(omb["TEC"][relact])))
                     stateloc = str(omb["State Location"][relact])
                     if stateloc == "CÃ´te d'Ivoire":
                         stateloc = "Côte d'Ivoire"
@@ -1300,10 +1305,10 @@ for ombActs in ombgrouping:
         os.makedirs('export/' + time.strftime("%m-%d-%Y") + '/')
     # This line is for country names
     # TODO: int(ombActs[1]) <-> int(act)
-    # output_file = open('export/' + time.strftime("%m-%d-%Y") +
-    # '/iati-activities-Worldwide 4.xml', 'w', encoding='utf-8')
-    output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-' +
-                       str(omb["Country File Name"][int(ombActs[1])])+'.xml', 'w', encoding='utf-8')
+    output_file = open('export/' + time.strftime("%m-%d-%Y")+'/iati-activities-Worldwide 2.xml',
+                       'w', encoding='utf-8')
+    # output_file = open('export/' + time.strftime("%m-%d-%Y") + '/iati-activities-' +
+    #                   str(omb["Country File Name"][int(ombActs[1])])+'.xml', 'w', encoding='utf-8')
     # This line is for country codes
     # output_file = open('export/' + time.strftime("%m-%d-%Y") +
     # '/iati-activities-'+ombActs[0]+'.xml', 'w', encoding='utf-8')
