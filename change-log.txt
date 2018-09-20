@@ -1,7 +1,21 @@
 Change Log for IATI XML Production Script
 
+September 20, 2018, Version 0.38:
+  Additions:
+    Added a feature for importing provided cluster codes.
+    
+  Changes:
+    Removed deprecated sector_loop feature
+    
+  Fixes:
+    Adjusted how decimal numbers get imported into XML.
+    
+  Future:
+  
+
 September 7, 2018, Version 0.36:
   Lost track of keeping change-log updates. Sorry!
+
 
 September 20, 2017, Version 0.29:
   Additions:
